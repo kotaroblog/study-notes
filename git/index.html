@@ -1,0 +1,691 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>見えるGit</title>
+<meta name="description" content="Git のコマンド1つで、ファイルとブランチがどこからどこへ動くかを1ステップずつ見られる図解。SVN 経験者向け。">
+<style>
+:root{
+  --bg:#f5f6f8; --surface:#ffffff; --surface-2:#f0f2f5; --line:#d6dce3; --line-soft:#e6eaef;
+  --ink:#141c24; --muted:#52606c; --faint:#87939e;
+  --local:#2560c0; --local-bg:#e2ecfa; --local-ink:#173f7c;
+  --remote:#18875a; --remote-bg:#ddf2e7; --remote-ink:#0f5538;
+  --peer:#7a4cc2; --peer-bg:#eee6fa;
+  --hl:#d47a06; --hl-soft:#fdf1dc;
+  --node:#ffffff; --node-stroke:#36424d; --edge:#98a4b0;
+  --code-bg:#121a22; --code-ink:#e8eef4; --code-faint:#8fa0b0;
+  --shadow:0 1px 2px rgba(16,24,40,.06),0 1px 1px rgba(16,24,40,.03);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1418; --surface:#161d23; --surface-2:#1c242b; --line:#2b353e; --line-soft:#232c34;
+    --ink:#e3e9ee; --muted:#9aa7b2; --faint:#6f7c87;
+    --local:#6ea2f0; --local-bg:#16263d; --local-ink:#b9d2fa;
+    --remote:#4fc08d; --remote-bg:#123024; --remote-ink:#a8e6c8;
+    --peer:#b18cf0; --peer-bg:#261d38;
+    --hl:#f0a43a; --hl-soft:#33240f;
+    --node:#1c242b; --node-stroke:#c9d3db; --edge:#5d6a76;
+    --code-bg:#0a0f13; --code-ink:#e3e9ee; --code-faint:#7d8c99;
+    --shadow:0 1px 2px rgba(0,0,0,.45);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1418; --surface:#161d23; --surface-2:#1c242b; --line:#2b353e; --line-soft:#232c34;
+  --ink:#e3e9ee; --muted:#9aa7b2; --faint:#6f7c87;
+  --local:#6ea2f0; --local-bg:#16263d; --local-ink:#b9d2fa;
+  --remote:#4fc08d; --remote-bg:#123024; --remote-ink:#a8e6c8;
+  --peer:#b18cf0; --peer-bg:#261d38;
+  --hl:#f0a43a; --hl-soft:#33240f;
+  --node:#1c242b; --node-stroke:#c9d3db; --edge:#5d6a76;
+  --code-bg:#0a0f13; --code-ink:#e3e9ee; --code-faint:#7d8c99;
+  --shadow:0 1px 2px rgba(0,0,0,.45);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic UI","Meiryo",system-ui,sans-serif;
+  font-size:15px;line-height:1.75}
+code,.mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+.wrap{max-width:1160px;margin:0 auto;padding:28px 16px 80px}
+h1,h2,h3{line-height:1.35;margin:0;text-wrap:balance}
+a{color:var(--local)}
+
+/* header */
+.head{padding-bottom:18px;border-bottom:2px solid var(--ink);margin-bottom:22px}
+.crumb{margin:0 0 10px;font-size:13px}
+.crumb a{text-decoration:none}
+.crumb a:hover{text-decoration:underline}
+.eyebrow{font-size:12px;letter-spacing:.12em;color:var(--muted);margin:0 0 6px}
+h1{font-size:clamp(28px,5vw,38px);font-weight:800;letter-spacing:.02em}
+.lede{color:var(--muted);margin:8px 0 0;max-width:60ch}
+
+/* svn cards */
+.svn-diff{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin:0 0 28px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;box-shadow:var(--shadow)}
+.card .n{font-size:12px;font-weight:700;color:var(--local);letter-spacing:.06em}
+.card h3{font-size:15.5px;margin:4px 0 6px}
+.card p{margin:0;font-size:14px;color:var(--muted)}
+.sec-title{font-size:19px;margin:0 0 4px}
+.sec-sub{color:var(--muted);font-size:14px;margin:0 0 14px}
+
+/* player */
+.player{background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);overflow:hidden}
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:14px 16px;border-bottom:1px solid var(--line-soft)}
+.bar .scene{font-weight:700;font-size:15px}
+.bar .count{font-size:13px;color:var(--muted)}
+.dots{display:flex;flex-wrap:wrap;gap:6px;margin-left:auto}
+.dot{width:26px;height:26px;border-radius:50%;border:1px solid var(--line);background:var(--surface-2);
+  color:var(--muted);font:600 11px/1 ui-monospace,Menlo,monospace;cursor:pointer;padding:0}
+.dot[aria-current="step"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.dot:focus-visible,.btn:focus-visible{outline:2px solid var(--hl);outline-offset:2px}
+
+.cmdrow{padding:16px 16px 6px;display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.who{font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;border:1px solid}
+.who.me{color:var(--local-ink);background:var(--local-bg);border-color:var(--local)}
+.who.peer{color:var(--peer);background:var(--peer-bg);border-color:var(--peer)}
+.who.gh{color:var(--remote-ink);background:var(--remote-bg);border-color:var(--remote)}
+.who.none{color:var(--muted);background:var(--surface-2);border-color:var(--line)}
+.step-title{font-weight:700;font-size:16px}
+.cmd{margin:6px 16px 0;background:var(--code-bg);color:var(--code-ink);border-radius:8px;padding:12px 14px;
+  font-size:15px;overflow-x:auto;white-space:pre}
+.cmd .pr{color:var(--code-faint);user-select:none}
+.cmd .act{color:var(--code-faint);font-family:inherit}
+.move{margin:10px 16px 0;display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:700;
+  color:var(--hl);background:var(--hl-soft);border:1px solid var(--hl);border-radius:6px;padding:3px 10px}
+
+/* areas */
+.areas{display:grid;gap:12px;padding:16px;
+  grid-template-columns:minmax(190px,220px) 1fr 1fr;
+  grid-template-areas:"lpc lpc lgh" "work local remote" "stage local remote"}
+.grp{font-size:12px;font-weight:700;letter-spacing:.08em;color:var(--muted);
+  border-bottom:2px solid var(--line);padding-bottom:3px}
+.grp.pc{grid-area:lpc}
+.grp.gh{grid-area:lgh;color:var(--remote-ink);border-color:var(--remote)}
+.area{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--surface);min-width:0;
+  transition:box-shadow .25s ease,border-color .25s ease}
+.area.on{border-color:var(--hl);box-shadow:0 0 0 3px var(--hl-soft)}
+.area h4{margin:0 0 6px;font-size:13.5px;display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
+.area h4 small{font-weight:400;color:var(--faint);font-size:11.5px}
+.a-work{grid-area:work}.a-stage{grid-area:stage}.a-local{grid-area:local}.a-remote{grid-area:remote}
+.files{list-style:none;margin:0;padding:0}
+.files li{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 6px;border-radius:6px;font-size:13.5px}
+.files li+li{border-top:1px dashed var(--line-soft)}
+.files li.chg{background:var(--hl-soft)}
+.files li.gone .fname{text-decoration:line-through;color:var(--faint)}
+.fname{font-family:ui-monospace,Menlo,monospace;font-size:13px;overflow-wrap:anywhere}
+.badge{font-size:11px;font-weight:700;white-space:nowrap;padding:1px 7px;border-radius:999px;border:1px solid var(--line);color:var(--muted);background:var(--surface-2)}
+.badge.untracked{color:var(--hl);border-color:var(--hl);background:var(--hl-soft)}
+.badge.staged,.badge.new{color:var(--local-ink);border-color:var(--local);background:var(--local-bg)}
+.badge.gone{color:var(--faint)}
+.empty{color:var(--faint);font-size:13px;margin:4px 2px}
+.gwrap{overflow-x:auto}
+.gwrap svg{display:block;width:100%;min-width:300px;max-width:560px;height:auto;margin:0 auto}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;padding:0 16px 14px;font-size:12px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{display:inline-block;width:26px;height:13px;border-radius:3px;border:1.5px solid}
+.sw.l{background:var(--local-bg);border-color:var(--local)}
+.sw.t{background:transparent;border-color:var(--local);border-style:dashed}
+.sw.r{background:var(--remote-bg);border-color:var(--remote)}
+.sw.n{border-radius:50%;width:13px;border-color:var(--hl);background:var(--hl-soft)}
+
+/* svg */
+.edge{stroke:var(--edge);stroke-width:2.2;fill:none}
+.node circle.c{fill:var(--node);stroke:var(--node-stroke);stroke-width:2}
+.node text{fill:var(--ink);font:700 14px ui-monospace,Menlo,monospace;text-anchor:middle;dominant-baseline:central}
+.node .ring{fill:none;stroke:var(--hl);stroke-width:3;opacity:.9}
+.lbl rect{stroke-width:1.5}
+.lbl text{font:600 14px ui-monospace,Menlo,monospace;dominant-baseline:central;text-anchor:middle}
+.lbl.local rect{fill:var(--local-bg);stroke:var(--local)}
+.lbl.local text{fill:var(--local-ink)}
+.lbl.track rect{fill:var(--surface);stroke:var(--local);stroke-dasharray:4 3}
+.lbl.track text{fill:var(--muted)}
+.lbl.remote rect{fill:var(--remote-bg);stroke:var(--remote)}
+.lbl.remote text{fill:var(--remote-ink)}
+.lbl.head rect{stroke-width:2.6}
+.lbl.head text{font-weight:800}
+.lbl.chg rect{stroke:var(--hl);stroke-width:2.6}
+.none-repo{fill:var(--faint);font-size:13px;text-anchor:middle}
+@media (prefers-reduced-motion:no-preference){
+  .node.new .ring{animation:pulse 1.4s ease-out 2}
+  .lbl.chg rect,.files li.chg{animation:flash 1.2s ease-out 1}
+}
+@keyframes pulse{0%{opacity:0;transform-origin:center}40%{opacity:1}100%{opacity:.9}}
+@keyframes flash{0%{opacity:.35}100%{opacity:1}}
+
+/* explanation */
+.explain{padding:4px 16px 16px;display:grid;gap:12px}
+.explain p{margin:0}
+.what{font-size:15.5px}
+.svn{background:var(--surface-2);border-left:4px solid var(--faint);border-radius:0 8px 8px 0;padding:10px 14px;font-size:14px}
+.svn b{font-size:12px;letter-spacing:.06em;color:var(--muted);display:block}
+.opts h4{margin:0 0 6px;font-size:14px}
+.opts table{width:100%;border-collapse:collapse;font-size:14px}
+.opts td{padding:7px 8px;border-top:1px solid var(--line-soft);vertical-align:top}
+.opts td:first-child{width:46%}
+.opts code{font-size:13px;background:var(--surface-2);border:1px solid var(--line-soft);border-radius:5px;padding:1px 6px;overflow-wrap:anywhere}
+.tag{font-size:11px;font-weight:700;padding:0 6px;border-radius:4px;margin-left:6px;white-space:nowrap}
+.tag.now{color:var(--local-ink);background:var(--local-bg)}
+.tag.warn{color:#fff;background:#c2410c}
+.nav{display:flex;justify-content:space-between;gap:10px;padding:12px 16px;border-top:1px solid var(--line-soft);background:var(--surface-2)}
+.btn{font:inherit;font-weight:700;font-size:14px;padding:9px 18px;border-radius:8px;border:1px solid var(--line);
+  background:var(--surface);color:var(--ink);cursor:pointer;min-height:44px}
+.btn.primary{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.btn:disabled{opacity:.4;cursor:default}
+.hint{font-size:12px;color:var(--faint);align-self:center}
+
+/* cheat sheet */
+.sheet{margin-top:34px}
+.sheet table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:14px}
+.sheet th,.sheet td{text-align:left;padding:9px 12px;border-top:1px solid var(--line-soft);vertical-align:top}
+.sheet th{background:var(--surface-2);font-size:12.5px;color:var(--muted);border-top:0}
+.sheet code{font-size:13.5px}
+.tblwrap{overflow-x:auto}
+footer{margin-top:36px;padding-top:14px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+
+@media (max-width:900px){
+  .areas{grid-template-columns:1fr 1fr;grid-template-areas:"lpc lpc" "work stage" "local local" "lgh lgh" "remote remote"}
+}
+@media (max-width:560px){
+  .areas{grid-template-columns:1fr;grid-template-areas:"lpc" "work" "stage" "local" "lgh" "remote"}
+  .dots{margin-left:0}
+  .opts td:first-child{width:auto}
+  .opts tr{display:grid}
+  .opts td{border-top:0;padding:2px 4px}
+  .opts tr+tr td:first-child{border-top:1px solid var(--line-soft);padding-top:8px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="head">
+    <p class="crumb"><a href="../">← 教材一覧</a></p>
+    <p class="eyebrow">SVN 経験者のための Git 図解</p>
+    <h1>見えるGit</h1>
+    <p class="lede">コマンド1つで、ファイルとブランチが「どこからどこへ」動くのか。作業フォルダ・ステージ・ローカル・リモートの4か所を並べて、1ステップずつ見ていきます。</p>
+  </header>
+
+  <section aria-labelledby="svn-h">
+    <h2 class="sec-title" id="svn-h">SVN から来た人がつまずく3つの違い</h2>
+    <p class="sec-sub">ここだけ先に押さえると、下の図が読みやすくなります。</p>
+    <div class="svn-diff">
+      <div class="card"><div class="n">違い 1</div><h3>コミットは手元だけ。共有は push で</h3>
+        <p>SVN の commit は「サーバーに送る」まで1回で済みます。Git は commit で手元に記録し、push で初めてリモートに送ります。</p></div>
+      <div class="card"><div class="n">違い 2</div><h3>ブランチは「コミットに貼る付箋」</h3>
+        <p>フォルダをコピーするのではなく、どのコミットを指しているかの名札です。手元で一瞬で作れて、push するまで他の人には見えません。</p></div>
+      <div class="card"><div class="n">違い 3</div><h3>origin/main は「リモートの main の控え」</h3>
+        <p>最後に fetch（または pull）したときに、リモートの main がどこを指していたかの控えで、手元にあります。取り直すまで古いままです。</p></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="scene-h">
+    <h2 class="sec-title" id="scene-h">場面1：機能ブランチを作って、main に入るまで</h2>
+    <p class="sec-sub">開発でいちばん多い流れです。途中で同僚の変更が先に main へ入る場面も入れて、ローカルとリモートのずれ方を見ます。</p>
+
+    <div class="player" id="player">
+      <div class="bar">
+        <span class="scene">ステップ</span>
+        <span class="count" id="count"></span>
+        <nav class="dots" id="dots" aria-label="ステップ一覧"></nav>
+      </div>
+      <div class="cmdrow"><span class="who" id="who"></span><span class="step-title" id="stitle"></span></div>
+      <div class="cmd" id="cmd"></div>
+      <div><span class="move" id="move"></span></div>
+
+      <div class="areas">
+        <div class="grp pc">自分の PC</div>
+        <div class="grp gh">リモート（GitHub）</div>
+        <div class="area a-work" id="a-work"><h4>作業フォルダ <small>実際に編集するファイル</small></h4><div id="work"></div></div>
+        <div class="area a-stage" id="a-stage"><h4>ステージ <small>次のコミットに入れる変更</small></h4><div id="stage"></div></div>
+        <div class="area a-local" id="a-local"><h4>ローカルリポジトリ <small>手元の履歴とブランチ</small></h4><div class="gwrap" id="local"></div></div>
+        <div class="area a-remote" id="a-remote"><h4>リモートリポジトリ <small>チームで共有する履歴</small></h4><div class="gwrap" id="remote"></div></div>
+      </div>
+      <div class="legend">
+        <span><i class="sw l"></i>ローカルブランチ（▶ が今いるブランチ＝HEAD）</span>
+        <span><i class="sw t"></i>リモートの控え（origin/〜）</span>
+        <span><i class="sw r"></i>リモートのブランチ</span>
+        <span><i class="sw n"></i>このステップで変わったところ</span>
+      </div>
+
+      <div class="explain">
+        <p class="what" id="what"></p>
+        <div class="svn" id="svn"></div>
+        <div class="opts" id="opts"></div>
+      </div>
+      <div class="nav">
+        <button class="btn" id="prev" type="button">◀ 前へ</button>
+        <span class="hint">キーボードの ← → でも進めます</span>
+        <button class="btn primary" id="next" type="button">次へ ▶</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="sheet" aria-labelledby="sheet-h">
+    <h2 class="sec-title" id="sheet-h">早見表：コマンドとデータの動き</h2>
+    <p class="sec-sub">この場面に出てきたコマンドだけをまとめています。</p>
+    <div class="tblwrap"><table>
+      <thead><tr><th>コマンド</th><th>動き</th><th>SVN だと</th></tr></thead>
+      <tbody>
+        <tr><td><code>git clone</code></td><td>リモート → ローカル → 作業フォルダ</td><td>svn checkout（履歴ごと手元に来る）</td></tr>
+        <tr><td><code>git switch</code></td><td>ローカル → 作業フォルダ（中身を入れ替える）</td><td>svn switch</td></tr>
+        <tr><td><code>git add</code></td><td>作業フォルダ → ステージ</td><td>svn add に似ているが、変更のたびに必要</td></tr>
+        <tr><td><code>git commit</code></td><td>ステージ → ローカル</td><td>svn commit の「記録する」半分</td></tr>
+        <tr><td><code>git push</code></td><td>ローカル → リモート</td><td>svn commit の「サーバーへ送る」半分</td></tr>
+        <tr><td><code>git fetch</code></td><td>リモート → ローカル（控えだけ更新）</td><td>svn status -u に近い</td></tr>
+        <tr><td><code>git pull</code></td><td>リモート → ローカル → 作業フォルダ</td><td>svn update</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <footer>作成：コータロー（<a href="https://qiita.com/kotaro_ai_lab">Qiita</a>）。図の各ステップの状態は、同じ操作を実際の Git で行って確かめています。</footer>
+</div>
+
+<script type="application/json" id="scenario">
+{
+  "commits": {
+    "A": {"x": 0, "y": 0, "parents": [], "msg": "最初のコミット"},
+    "B": {"x": 1, "y": 0, "parents": ["A"], "msg": "トップ画面を追加"},
+    "C": {"x": 2, "y": 1, "parents": ["B"], "msg": "ログイン画面を追加"},
+    "D": {"x": 2, "y": 0, "parents": ["B"], "msg": "設定画面を追加（同僚）"},
+    "M": {"x": 3, "y": 0, "parents": ["D", "C"], "msg": "PR のマージ"}
+  },
+  "steps": [
+    {
+      "who": "none", "title": "はじめ：GitHub に main がある", "cmd": null,
+      "action": "（まだ何もしていない）", "move": [],
+      "remote": {"commits": ["A", "B"], "branches": {"main": "B"}},
+      "local": null, "work": null, "stage": null,
+      "what": "チームのリポジトリが GitHub にあり、main ブランチにはコミット A・B があります。自分の PC にはまだ何もありません。",
+      "svn": "SVN でいう、サーバーに trunk がある状態です。",
+      "options": []
+    },
+    {
+      "who": "me", "title": "リポジトリを手元に複製する", "cmd": "git clone https://github.com/team/app.git",
+      "move": ["remote", "local", "work"],
+      "remote": {"commits": ["A", "B"], "branches": {"main": "B"}},
+      "local": {"commits": ["A", "B"], "branches": {"main": "B"}, "tracking": {"origin/main": "B"}, "head": "main"},
+      "work": [["README.md", "clean"], ["top.java", "clean"]], "stage": [],
+      "what": "リモートの履歴（A・B）が丸ごとローカルリポジトリにコピーされ、作業フォルダに main の中身が出てきます。手元には main と origin/main の2つの名前ができます。origin はクローン元のリモートに付く既定の名前で、origin/main は「リモートの main がどこを指していたか」の控えです。",
+      "svn": "svn checkout に近い操作です。違うのは、最新の中身だけでなく履歴（A・B）まで手元に来ること。履歴を見るのにサーバーは要りません。",
+      "options": [
+        ["git clone <URL>", "リモートを複製する", "now"],
+        ["git clone <URL> <フォルダ名>", "保存先のフォルダ名を指定する", ""],
+        ["git clone -b <ブランチ> <URL>", "main 以外のブランチを最初に出す", ""],
+        ["git clone --depth 1 <URL>", "最新のコミットだけを取る（履歴が要らないとき）", ""],
+        ["git remote -v", "origin がどの URL を指しているか確かめる", ""]
+      ]
+    },
+    {
+      "who": "me", "title": "機能ブランチを作って移る", "cmd": "git switch -c feature/login",
+      "move": ["local"],
+      "remote": {"commits": ["A", "B"], "branches": {"main": "B"}},
+      "local": {"commits": ["A", "B"], "branches": {"main": "B", "feature/login": "B"}, "tracking": {"origin/main": "B"}, "head": "feature/login"},
+      "work": [["README.md", "clean"], ["top.java", "clean"]], "stage": [],
+      "what": "ブランチを作るとは、今いるコミット B に「feature/login」という付箋を1枚貼ることです。ファイルはコピーされず、一瞬で終わります。▶ の付いた付箋が今いるブランチ（HEAD）で、これからのコミットはこの付箋を前へ進めます。リモートにはまだ feature/login はありません。feature/〜 という名前はチームの決まりで、Git の決まりではありません。",
+      "svn": "SVN では svn copy でサーバー上に branches/〜 を作りますが、Git のブランチ作成は手元だけで完結します。push するまで誰にも見えません。",
+      "options": [
+        ["git switch -c <名前>", "作って、そのブランチへ移る", "now"],
+        ["git branch <名前>", "作るだけ。移らない", ""],
+        ["git checkout -b <名前>", "昔からの書き方。switch -c と同じ", ""],
+        ["git switch -c <名前> origin/main", "起点を指定して作る（手元の main が古いとき）", ""],
+        ["git branch", "手元のブランチ一覧（* が今いるブランチ）", ""]
+      ]
+    },
+    {
+      "who": "me", "title": "ファイルを作って、状態を見る", "cmd": "git status",
+      "action": "login.java を新しく作ってから",
+      "move": ["work"],
+      "remote": {"commits": ["A", "B"], "branches": {"main": "B"}},
+      "local": {"commits": ["A", "B"], "branches": {"main": "B", "feature/login": "B"}, "tracking": {"origin/main": "B"}, "head": "feature/login"},
+      "work": [["README.md", "clean"], ["login.java", "untracked"], ["top.java", "clean"]], "stage": [],
+      "what": "作業フォルダに login.java を作りました。変わったのは作業フォルダだけで、ステージにもローカルリポジトリにも記録はありません。git status は「どこに差があるか」を見るコマンドで、login.java は Untracked files（まだ Git が管理していないファイル）として表示されます。",
+      "svn": "svn status で ? と表示される状態と同じです。",
+      "options": [
+        ["git status", "作業フォルダ・ステージ・ローカルの差をまとめて見る", "now"],
+        ["git status -s", "1ファイル1行の短い表示（?? が未追跡）", ""],
+        ["git diff", "作業フォルダとステージの中身の差", ""],
+        ["git diff --staged", "ステージと最新コミットの中身の差", ""]
+      ]
+    },
+    {
+      "who": "me", "title": "コミットに入れるものを選ぶ", "cmd": "git add login.java",
+      "move": ["work", "stage"],
+      "remote": {"commits": ["A", "B"], "branches": {"main": "B"}},
+      "local": {"commits": ["A", "B"], "branches": {"main": "B", "feature/login": "B"}, "tracking": {"origin/main": "B"}, "head": "feature/login"},
+      "work": [["README.md", "clean"], ["login.java", "staged"], ["top.java", "clean"]], "stage": [["login.java", "new"]],
+      "what": "git add は「次のコミットに入れる内容」をステージに登録します。登録されるのは add した時点の中身です。このあと login.java をさらに直したら、もう一度 add しないとその変更はコミットに入りません。",
+      "svn": "svn add は新しいファイルを管理対象にする操作で、1回だけです。git add は新規ファイルでも既存ファイルの変更でも、コミットに入れたいたびに行います。",
+      "options": [
+        ["git add <ファイル>", "そのファイルをステージに登録する", "now"],
+        ["git add .", "今いるフォルダ以下の変更をすべて登録する", ""],
+        ["git add -p", "変更を塊ごとに見ながら、入れる部分だけ選ぶ", ""],
+        ["git restore --staged <ファイル>", "ステージから外す（作業フォルダの中身はそのまま）", ""]
+      ]
+    },
+    {
+      "who": "me", "title": "手元に記録する", "cmd": "git commit -m \"ログイン画面を追加\"",
+      "move": ["stage", "local"],
+      "remote": {"commits": ["A", "B"], "branches": {"main": "B"}},
+      "local": {"commits": ["A", "B", "C"], "branches": {"main": "B", "feature/login": "C"}, "tracking": {"origin/main": "B"}, "head": "feature/login"},
+      "work": [["README.md", "clean"], ["login.java", "clean"], ["top.java", "clean"]], "stage": [],
+      "what": "ステージの内容がコミット C としてローカルリポジトリに記録され、今いるブランチ feature/login の付箋が C へ進みました。main と origin/main は B のままです。リモートは何も変わっていません。C はまだ自分の PC の中にしかありません。",
+      "svn": "svn commit はサーバーに届きますが、git commit は手元に記録するだけです。誰にも見えていないので、push 前なら直したりまとめたりできます。",
+      "options": [
+        ["git commit -m \"メッセージ\"", "メッセージを付けてコミットする", "now"],
+        ["git commit", "エディタが開き、そこでメッセージを書く", ""],
+        ["git commit --amend", "直前のコミットを作り直す（push 前に限る）", "warn"],
+        ["git commit -a -m \"…\"", "追跡中のファイルの変更を add してからコミット（新規ファイルは入らない）", ""],
+        ["git log --oneline --graph --all", "全ブランチの履歴を図で見る", ""]
+      ]
+    },
+    {
+      "who": "me", "title": "リモートに送る", "cmd": "git push -u origin feature/login",
+      "move": ["local", "remote"],
+      "remote": {"commits": ["A", "B", "C"], "branches": {"main": "B", "feature/login": "C"}},
+      "local": {"commits": ["A", "B", "C"], "branches": {"main": "B", "feature/login": "C"}, "tracking": {"origin/main": "B", "origin/feature/login": "C"}, "head": "feature/login"},
+      "work": [["README.md", "clean"], ["login.java", "clean"], ["top.java", "clean"]], "stage": [],
+      "what": "C がリモートに送られ、リモートにも feature/login ブランチができました。手元にはその控え origin/feature/login ができます。-u は「このブランチの相手は origin の feature/login」と覚えさせるオプションで、次からは git push だけで送れます。ここで初めてチームの人から C が見え、GitHub でプルリクエスト（PR）を作れるようになります。",
+      "svn": "svn commit の「サーバーへ送る」半分がここに当たります。",
+      "options": [
+        ["git push -u origin <ブランチ>", "初回。送って、相手のブランチを覚えさせる", "now"],
+        ["git push", "2回目以降（-u 済みなら相手を書かなくてよい）", ""],
+        ["git branch -vv", "各ブランチの相手（upstream）と、先行・遅れの数を見る", ""],
+        ["git push --force-with-lease", "書き換えた履歴を送る。共有しているブランチでは使わない", "warn"]
+      ]
+    },
+    {
+      "who": "peer", "title": "同僚の変更が先に main へ入る", "cmd": null,
+      "action": "（同僚の PR が GitHub でマージされ、リモートの main に D が入った）",
+      "move": ["remote"],
+      "remote": {"commits": ["A", "B", "C", "D"], "branches": {"main": "D", "feature/login": "C"}},
+      "local": {"commits": ["A", "B", "C"], "branches": {"main": "B", "feature/login": "C"}, "tracking": {"origin/main": "B", "origin/feature/login": "C"}, "head": "feature/login"},
+      "work": [["README.md", "clean"], ["login.java", "clean"], ["top.java", "clean"]], "stage": [],
+      "what": "リモートの main が D に進みました。でも手元の origin/main は B のままです。origin/main は自動では更新されず、fetch や pull をしたときにだけ最新になります。手元だけ見ていると、リモートが進んだことに気づけません。",
+      "svn": "SVN でも update するまで手元は古いままです。Git ではさらに「リモートの控え（origin/main）」も古いまま、という点が違います。",
+      "options": [
+        ["git status", "「up to date」と出ても、それは手元の控えと比べた結果。リモートが進んでいても出ることがある", "warn"]
+      ]
+    },
+    {
+      "who": "me", "title": "リモートの様子を取ってくる", "cmd": "git fetch",
+      "move": ["remote", "local"],
+      "remote": {"commits": ["A", "B", "C", "D"], "branches": {"main": "D", "feature/login": "C"}},
+      "local": {"commits": ["A", "B", "C", "D"], "branches": {"main": "B", "feature/login": "C"}, "tracking": {"origin/main": "D", "origin/feature/login": "C"}, "head": "feature/login"},
+      "work": [["README.md", "clean"], ["login.java", "clean"], ["top.java", "clean"]], "stage": [],
+      "what": "fetch はリモートの新しいコミット D を手元に取ってきて、origin/main を D に進めます。手元の main（B のまま）と作業フォルダは変えません。リモートの様子を見に行くだけの、安全な操作です。",
+      "svn": "svn status -u（サーバー側の更新を確かめるだけ）に近い操作です。ただし fetch はコミットの中身まで取ってくるので、取ったあとはオフラインでも差を見られます。",
+      "options": [
+        ["git fetch", "origin から全ブランチの新しいコミットを取ってくる", "now"],
+        ["git fetch --prune", "リモートで消えたブランチの控えも消す", ""],
+        ["git branch -vv", "手元のブランチがリモートより何コミット遅れ・先行しているか見る", ""],
+        ["git log --oneline main..origin/main", "リモートの main にだけあるコミットを一覧する", ""]
+      ]
+    },
+    {
+      "who": "gh", "title": "PR がマージされる", "cmd": null,
+      "action": "（GitHub で PR をレビューし、［Merge pull request］を押した）",
+      "move": ["remote"],
+      "remote": {"commits": ["A", "B", "C", "D", "M"], "branches": {"main": "M", "feature/login": "C"}},
+      "local": {"commits": ["A", "B", "C", "D"], "branches": {"main": "B", "feature/login": "C"}, "tracking": {"origin/main": "D", "origin/feature/login": "C"}, "head": "feature/login"},
+      "work": [["README.md", "clean"], ["login.java", "clean"], ["top.java", "clean"]], "stage": [],
+      "what": "PR をマージすると、リモートの main に C の変更が取り込まれます。今回は「マージコミット M」を作る方法で、M は D と C の2つを親に持ちます。マージボタンは GitHub 上の操作なので、変わるのはリモートだけ。手元は何も変わりません。",
+      "svn": "svn merge に当たりますが、Git ではレビューとマージを GitHub の PR で行うのが一般的です。",
+      "options": [
+        ["Create a merge commit", "マージコミットを作る。ブランチの履歴がそのまま残る", "now"],
+        ["Squash and merge", "ブランチのコミットを1つにまとめて main に載せる", ""],
+        ["Rebase and merge", "ブランチのコミットを main の先に付け直して載せる", ""],
+        ["（どれを使うか）", "リポジトリの設定やチームの決まりで決まっていることが多い", ""]
+      ]
+    },
+    {
+      "who": "me", "title": "main に戻る", "cmd": "git switch main",
+      "move": ["local", "work"],
+      "remote": {"commits": ["A", "B", "C", "D", "M"], "branches": {"main": "M", "feature/login": "C"}},
+      "local": {"commits": ["A", "B", "C", "D"], "branches": {"main": "B", "feature/login": "C"}, "tracking": {"origin/main": "D", "origin/feature/login": "C"}, "head": "main"},
+      "work": [["README.md", "clean"], ["top.java", "clean"]], "stage": [],
+      "what": "今いるブランチが main（B）に切り替わり、作業フォルダの中身も B の状態に入れ替わります。login.java が消えたように見えますが、feature/login（C）に記録されているので失われていません。手元の main はまだ B で、マージの結果は入っていません。",
+      "svn": "svn switch で trunk に切り替えるのと同じで、フォルダの中身がブランチの内容に入れ替わります。",
+      "options": [
+        ["git switch <ブランチ>", "そのブランチへ移る", "now"],
+        ["git switch -", "直前にいたブランチへ戻る", ""],
+        ["git checkout <ブランチ>", "昔からの書き方", ""],
+        ["（切り替えられないとき）", "まだコミットしていない変更がぶつかると止まる。先に commit するか stash で退避する", "warn"]
+      ]
+    },
+    {
+      "who": "me", "title": "最新の main を取り込む", "cmd": "git pull",
+      "move": ["remote", "local", "work"],
+      "remote": {"commits": ["A", "B", "C", "D", "M"], "branches": {"main": "M", "feature/login": "C"}},
+      "local": {"commits": ["A", "B", "C", "D", "M"], "branches": {"main": "M", "feature/login": "C"}, "tracking": {"origin/main": "M", "origin/feature/login": "C"}, "head": "main"},
+      "work": [["README.md", "clean"], ["login.java", "clean"], ["settings.java", "clean"], ["top.java", "clean"]], "stage": [],
+      "what": "pull は「fetch ＋ マージ」です。まず M を取ってきて origin/main を M に進め、次に手元の main を origin/main に合わせます。手元の main では何もしていなかったので、付箋を M まで進めるだけ（早送り＝fast-forward）で済みました。作業フォルダにも login.java と同僚の settings.java がそろいます。",
+      "svn": "svn update に当たる操作です。",
+      "options": [
+        ["git pull", "fetch ＋ マージ", "now"],
+        ["git pull --rebase", "手元のコミットを、取ってきたコミットの後ろに付け直す", ""],
+        ["git pull --ff-only", "早送りできるときだけ取り込む。できなければ止まる", ""],
+        ["git config --global pull.ff only", "上の動きを毎回の既定にする", ""]
+      ]
+    },
+    {
+      "who": "gh", "title": "リモートのブランチを消す", "cmd": null,
+      "action": "（マージ後、GitHub の PR 画面で［Delete branch］を押した）",
+      "move": ["remote"],
+      "remote": {"commits": ["A", "B", "C", "D", "M"], "branches": {"main": "M"}},
+      "local": {"commits": ["A", "B", "C", "D", "M"], "branches": {"main": "M", "feature/login": "C"}, "tracking": {"origin/main": "M", "origin/feature/login": "C"}, "head": "main"},
+      "work": [["README.md", "clean"], ["login.java", "clean"], ["settings.java", "clean"], ["top.java", "clean"]], "stage": [],
+      "what": "リモートの feature/login が消えました。コミット C は main（M）からたどれるので残ります。手元の origin/feature/login はまだ残っています。控えなので、取り直すまで古いままです。",
+      "svn": "svn delete で branches/〜 を消すのに当たります。Git では、リモートのブランチと手元のブランチは別々に消します。",
+      "options": [
+        ["git push origin --delete <ブランチ>", "コマンドでリモートのブランチを消す（ボタンと同じ結果）", ""],
+        ["（自動で消す）", "GitHub のリポジトリ設定で、マージ後にブランチを自動で消すようにできる", ""]
+      ]
+    },
+    {
+      "who": "me", "title": "消えたブランチの控えを片づける", "cmd": "git fetch --prune",
+      "move": ["remote", "local"],
+      "remote": {"commits": ["A", "B", "C", "D", "M"], "branches": {"main": "M"}},
+      "local": {"commits": ["A", "B", "C", "D", "M"], "branches": {"main": "M", "feature/login": "C"}, "tracking": {"origin/main": "M"}, "head": "main"},
+      "work": [["README.md", "clean"], ["login.java", "clean"], ["settings.java", "clean"], ["top.java", "clean"]], "stage": [],
+      "what": "--prune を付けると、リモートで消えたブランチの控え（origin/feature/login）も手元から消えます。付けないと、消えたブランチの控えが手元に残り続けます。",
+      "svn": "SVN には「リモートの控え」が無いので、対応する操作はありません。",
+      "options": [
+        ["git fetch --prune", "取ってくるついでに、消えたブランチの控えを消す", "now"],
+        ["git config --global fetch.prune true", "毎回 prune する設定にする", ""],
+        ["git branch -a", "手元のブランチと控え（remotes/origin/…）を全部表示する", ""]
+      ]
+    },
+    {
+      "who": "me", "title": "手元のブランチを消す", "cmd": "git branch -d feature/login",
+      "move": ["local"],
+      "remote": {"commits": ["A", "B", "C", "D", "M"], "branches": {"main": "M"}},
+      "local": {"commits": ["A", "B", "C", "D", "M"], "branches": {"main": "M"}, "tracking": {"origin/main": "M"}, "head": "main"},
+      "work": [["README.md", "clean"], ["login.java", "clean"], ["settings.java", "clean"], ["top.java", "clean"]], "stage": [],
+      "what": "最後に手元の feature/login を消します。-d は「マージ済みのときだけ消す」安全な消し方で、C は main からたどれるので消せました。次の機能を作るときは、また main から git switch -c で新しいブランチを作ります。開発ではこの「作る → コミット → push → PR → マージ → 消す」の繰り返しで、ブランチが生まれては消えていきます。",
+      "svn": "SVN のブランチは長く残しがちですが、Git の機能ブランチは短命で、マージしたら消すのが一般的です。",
+      "options": [
+        ["git branch -d <ブランチ>", "マージ済みなら消す", "now"],
+        ["git branch -D <ブランチ>", "マージしていなくても消す（その作業が消える）", "warn"],
+        ["git branch --merged", "今のブランチにマージ済みのブランチを一覧する", ""]
+      ]
+    }
+  ]
+}
+</script>
+<script>
+(function () {
+  "use strict";
+  var data = JSON.parse(document.getElementById("scenario").textContent);
+  var steps = data.steps, commits = data.commits;
+  var AREA = { work: "作業フォルダ", stage: "ステージ", local: "ローカル", remote: "リモート" };
+  var WHO = { me: "自分", peer: "同僚", gh: "GitHub", none: "—" };
+  var WHOCLS = { me: "me", peer: "peer", gh: "gh", none: "none" };
+  var FILE = { clean: "変更なし", untracked: "未追跡", staged: "ステージ済み", modified: "変更あり", new: "新規" };
+  var idx = 0;
+
+  /* ---- graph geometry (fixed so the layout does not jump between steps) ---- */
+  var X0 = 36, DX = 96, Y0 = 100, Y1 = 176, W = 380, H = 252, ROW = 26, LH = 21, R = 16;
+  function cx(c) { return X0 + commits[c].x * DX; }
+  function cy(c) { return commits[c].y === 0 ? Y0 : Y1; }
+  function textW(s) {
+    var w = 0;
+    for (var i = 0; i < s.length; i++) w += s.charCodeAt(i) < 128 ? 8.4 : 14;
+    return w + 14;
+  }
+  function esc(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+
+  function labelsOf(repo, isRemote) {
+    var out = [];
+    if (!repo) return out;
+    var b = repo.branches || {};
+    Object.keys(b).forEach(function (n) {
+      out.push({ name: n, at: b[n], type: isRemote ? "remote" : "local", head: !isRemote && repo.head === n });
+    });
+    if (!isRemote) {
+      var t = repo.tracking || {};
+      Object.keys(t).forEach(function (n) { out.push({ name: n, at: t[n], type: "track", head: false }); });
+    }
+    out.sort(function (a, z) {
+      var rank = function (l) { return l.head ? 0 : l.type === "track" ? 2 : 1; };
+      return rank(a) - rank(z);
+    });
+    return out;
+  }
+
+  function graph(repo, prev, isRemote) {
+    if (!repo) {
+      return '<svg viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="まだ何もない"><text class="none-repo" x="' +
+        W / 2 + '" y="' + H / 2 + '">（まだ何もありません）</text></svg>';
+    }
+    var have = {}; repo.commits.forEach(function (c) { have[c] = true; });
+    var had = {}; if (prev) prev.commits.forEach(function (c) { had[c] = true; });
+    var prevAt = {}; labelsOf(prev, isRemote).forEach(function (l) { prevAt[l.type + ":" + l.name] = l.at; });
+    var s = "";
+    // edges
+    repo.commits.forEach(function (c) {
+      commits[c].parents.forEach(function (p) {
+        if (!have[p]) return;
+        var x1 = cx(p), y1 = cy(p), x2 = cx(c), y2 = cy(c);
+        if (y1 === y2) s += '<path class="edge" d="M' + x1 + " " + y1 + "L" + x2 + " " + y2 + '"/>';
+        else s += '<path class="edge" d="M' + x1 + " " + y1 + "C" + (x1 + 52) + " " + y1 + "," + (x2 - 52) + " " + y2 + "," + x2 + " " + y2 + '"/>';
+      });
+    });
+    // nodes
+    repo.commits.forEach(function (c) {
+      var isNew = prev !== undefined && !had[c];
+      s += '<g class="node' + (isNew ? " new" : "") + '"><title>' + c + "：" + esc(commits[c].msg) + "</title>" +
+        (isNew ? '<circle class="ring" cx="' + cx(c) + '" cy="' + cy(c) + '" r="' + (R + 6) + '"/>' : "") +
+        '<circle class="c" cx="' + cx(c) + '" cy="' + cy(c) + '" r="' + R + '"/>' +
+        '<text x="' + cx(c) + '" y="' + cy(c) + '">' + c + "</text></g>";
+    });
+    // labels, stacked above (main line) or below (branch line)
+    var stack = {};
+    labelsOf(repo, isRemote).forEach(function (l) {
+      var k = stack[l.at] || 0; stack[l.at] = k + 1;
+      var text = (l.head ? "▶ " : "") + l.name, w = textW(text), x = cx(l.at) - w / 2;
+      var top = commits[l.at].y === 0 ? cy(l.at) - 20 - LH - k * ROW : cy(l.at) + 20 + k * ROW;
+      var changed = prev !== undefined && prevAt[l.type + ":" + l.name] !== l.at;
+      s += '<g class="lbl ' + l.type + (l.head ? " head" : "") + (changed ? " chg" : "") + '">' +
+        '<rect x="' + x + '" y="' + top + '" width="' + w + '" height="' + LH + '" rx="4"/>' +
+        '<text x="' + cx(l.at) + '" y="' + (top + LH / 2) + '">' + esc(text) + "</text></g>";
+    });
+    var aria = (isRemote ? "リモート" : "ローカル") + "のコミット " + repo.commits.join("・");
+    return '<svg viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="' + esc(aria) + '">' + s + "</svg>";
+  }
+
+  function fileList(list, prevList, kind) {
+    if (list === null) return '<p class="empty">（まだ何もありません）</p>';
+    var prevMap = {};
+    (prevList || []).forEach(function (f) { prevMap[f[0]] = f[1]; });
+    var now = {}; list.forEach(function (f) { now[f[0]] = true; });
+    var rows = list.map(function (f) {
+      var chg = prevList !== undefined && prevMap[f[0]] !== f[1];
+      return '<li class="' + (chg ? "chg" : "") + '"><span class="fname">' + esc(f[0]) +
+        '</span><span class="badge ' + f[1] + '">' + FILE[f[1]] + "</span></li>";
+    });
+    if (kind === "work" && prevList) {
+      prevList.forEach(function (f) {
+        if (!now[f[0]]) rows.push('<li class="gone"><span class="fname">' + esc(f[0]) + '</span><span class="badge gone">見えなくなった</span></li>');
+      });
+    }
+    if (!rows.length) {
+      return '<p class="empty">' + (kind === "stage" ? "次のコミットに入る変更はありません" : "（ファイルなし）") + "</p>";
+    }
+    return '<ul class="files">' + rows.join("") + "</ul>";
+  }
+
+  function moveText(m) {
+    if (!m.length) return "";
+    if (m.length === 1) {
+      return m[0] === "remote" ? "リモートだけが変わる（手元は変わらない）" : AREA[m[0]] + "の中だけ";
+    }
+    return m.map(function (k) { return AREA[k]; }).join(" → ");
+  }
+
+  function render() {
+    var st = steps[idx], pv = idx > 0 ? steps[idx - 1] : undefined;
+    document.getElementById("count").textContent = (idx + 1) + " / " + steps.length;
+    Array.prototype.forEach.call(document.querySelectorAll(".dot"), function (d, i) {
+      if (i === idx) d.setAttribute("aria-current", "step"); else d.removeAttribute("aria-current");
+    });
+    var who = document.getElementById("who");
+    who.className = "who " + WHOCLS[st.who]; who.textContent = WHO[st.who];
+    document.getElementById("stitle").textContent = st.title;
+    var cmd = "";
+    if (st.action && st.cmd) cmd += '<span class="act"># ' + esc(st.action) + "</span>\n";
+    if (st.cmd) cmd += '<span class="pr">$ </span>' + esc(st.cmd);
+    else cmd += '<span class="act">' + esc(st.action || "") + "</span>";
+    document.getElementById("cmd").innerHTML = cmd;
+    var mv = document.getElementById("move"), mt = moveText(st.move);
+    mv.textContent = mt ? "動き：" + mt : ""; mv.hidden = !mt;
+    ["work", "stage", "local", "remote"].forEach(function (k) {
+      document.getElementById("a-" + k).classList.toggle("on", st.move.indexOf(k) >= 0);
+    });
+    document.getElementById("work").innerHTML = fileList(st.work, pv ? pv.work : undefined, "work");
+    document.getElementById("stage").innerHTML = fileList(st.stage, pv ? pv.stage : undefined, "stage");
+    document.getElementById("local").innerHTML = graph(st.local, pv ? pv.local : undefined, false);
+    document.getElementById("remote").innerHTML = graph(st.remote, pv ? pv.remote : undefined, true);
+    document.getElementById("what").textContent = st.what;
+    document.getElementById("svn").innerHTML = "<b>SVN だと</b>" + esc(st.svn);
+    var o = "";
+    if (st.options.length) {
+      o = "<h4>関連するコマンドとオプション</h4><table><tbody>" + st.options.map(function (r) {
+        var tag = r[2] === "now" ? '<span class="tag now">このステップ</span>' : r[2] === "warn" ? '<span class="tag warn">注意</span>' : "";
+        var codeLike = r[0].charAt(0) !== "（";
+        return "<tr><td>" + (codeLike ? "<code>" + esc(r[0]) + "</code>" : esc(r[0])) + tag + "</td><td>" + esc(r[1]) + "</td></tr>";
+      }).join("") + "</tbody></table>";
+    }
+    document.getElementById("opts").innerHTML = o;
+    document.getElementById("prev").disabled = idx === 0;
+    var nx = document.getElementById("next");
+    nx.disabled = idx === steps.length - 1;
+    nx.textContent = idx === steps.length - 1 ? "おわり" : "次へ ▶";
+    try { history.replaceState(null, "", "#step-" + (idx + 1)); } catch (e) {}
+  }
+
+  function go(i) { idx = Math.max(0, Math.min(steps.length - 1, i)); render(); }
+
+  var dots = document.getElementById("dots");
+  steps.forEach(function (st, i) {
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "dot"; b.textContent = i + 1;
+    b.setAttribute("aria-label", "ステップ " + (i + 1) + "：" + st.title);
+    b.addEventListener("click", function () { go(i); });
+    dots.appendChild(b);
+  });
+  document.getElementById("prev").addEventListener("click", function () { go(idx - 1); });
+  document.getElementById("next").addEventListener("click", function () { go(idx + 1); });
+  document.addEventListener("keydown", function (e) {
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
+    if (e.key === "ArrowRight") go(idx + 1);
+    else if (e.key === "ArrowLeft") go(idx - 1);
+  });
+  var m = /^#step-(\d+)$/.exec(location.hash || "");
+  if (m) idx = Math.max(0, Math.min(steps.length - 1, parseInt(m[1], 10) - 1));
+  render();
+})();
+</script>
+</body>
+</html>
