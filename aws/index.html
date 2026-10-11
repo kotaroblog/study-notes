@@ -1,0 +1,1303 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>見えるAWS</title>
+<meta name="description" content="AWS の基本の部品を1つずつ足しながら、Web アプリの構成図ができていく様子を見る図解。オンプレ経験者向け。">
+<style>
+:root{
+  --bg:#f5f6f8; --surface:#ffffff; --surface-2:#f0f2f5; --line:#d6dce3; --line-soft:#e6eaef;
+  --ink:#141c24; --muted:#52606c; --faint:#87939e;
+  --accent:#2560c0; --accent-bg:#e2ecfa; --accent-ink:#173f7c;
+  --hl:#d47a06; --hl-soft:#fdf1dc;
+  --c-compute:#c7660a; --c-network:#7442c8; --c-db:#2a64c8; --c-storage:#227a4c; --c-security:#b8352a; --c-mgmt:#a52c68;
+  --region:#1c7f86; --region-bg:#f2fafa; --vpc:#7442c8; --vpc-bg:#f7f3fd;
+  --pub:#227a4c; --pub-bg:#ebf7f0; --priv:#2a64c8; --priv-bg:#edf3fc;
+  --shadow:0 1px 2px rgba(16,24,40,.06),0 1px 1px rgba(16,24,40,.03);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1418; --surface:#161d23; --surface-2:#1c242b; --line:#2b353e; --line-soft:#232c34;
+    --ink:#e3e9ee; --muted:#9aa7b2; --faint:#6f7c87;
+    --accent:#6ea2f0; --accent-bg:#16263d; --accent-ink:#b9d2fa;
+    --hl:#f0a43a; --hl-soft:#33240f;
+    --c-compute:#f0a050; --c-network:#b18cf0; --c-db:#78a6f2; --c-storage:#5cc28d; --c-security:#ee7a6c; --c-mgmt:#e277ab;
+    --region:#4fc0c8; --region-bg:#121d1f; --vpc:#b18cf0; --vpc-bg:#1a1626;
+    --pub:#5cc28d; --pub-bg:#13241b; --priv:#78a6f2; --priv-bg:#141d2c;
+    --shadow:0 1px 2px rgba(0,0,0,.45);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1418; --surface:#161d23; --surface-2:#1c242b; --line:#2b353e; --line-soft:#232c34;
+  --ink:#e3e9ee; --muted:#9aa7b2; --faint:#6f7c87;
+  --accent:#6ea2f0; --accent-bg:#16263d; --accent-ink:#b9d2fa;
+  --hl:#f0a43a; --hl-soft:#33240f;
+  --c-compute:#f0a050; --c-network:#b18cf0; --c-db:#78a6f2; --c-storage:#5cc28d; --c-security:#ee7a6c; --c-mgmt:#e277ab;
+  --region:#4fc0c8; --region-bg:#121d1f; --vpc:#b18cf0; --vpc-bg:#1a1626;
+  --pub:#5cc28d; --pub-bg:#13241b; --priv:#78a6f2; --priv-bg:#141d2c;
+  --shadow:0 1px 2px rgba(0,0,0,.45);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic UI","Meiryo",system-ui,sans-serif;
+  font-size:15px;line-height:1.75}
+code{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+.wrap{max-width:1160px;margin:0 auto;padding:28px 16px 80px}
+h1,h2,h3{line-height:1.35;margin:0;text-wrap:balance}
+a{color:var(--accent)}
+.head{padding-bottom:18px;border-bottom:2px solid var(--ink);margin-bottom:22px}
+.crumb{margin:0 0 10px;font-size:13px}
+.crumb a{text-decoration:none}
+.crumb a:hover{text-decoration:underline}
+.eyebrow{font-size:12px;letter-spacing:.12em;color:var(--muted);margin:0 0 6px}
+h1{font-size:clamp(28px,5vw,38px);font-weight:800;letter-spacing:.02em}
+.lede{color:var(--muted);margin:8px 0 0;max-width:62ch}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin:0 0 28px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;box-shadow:var(--shadow)}
+.card .n{font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.06em}
+.card h3{font-size:15.5px;margin:4px 0 6px}
+.card p{margin:0;font-size:14px;color:var(--muted)}
+.sec-title{font-size:19px;margin:0 0 4px}
+.sec-sub{color:var(--muted);font-size:14px;margin:0 0 14px}
+
+.player{background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);overflow:hidden}
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:14px 16px;border-bottom:1px solid var(--line-soft)}
+.bar .scene{font-weight:700;font-size:15px}
+.bar .count{font-size:13px;color:var(--muted)}
+.dots{display:flex;flex-wrap:wrap;gap:6px;margin-left:auto}
+.dot{width:26px;height:26px;border-radius:50%;border:1px solid var(--line);background:var(--surface-2);
+  color:var(--muted);font:600 11px/1 ui-monospace,Menlo,monospace;cursor:pointer;padding:0}
+.dot[aria-current="step"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.dot:focus-visible,.btn:focus-visible{outline:2px solid var(--hl);outline-offset:2px}
+.step-title{padding:16px 16px 0;font-weight:700;font-size:17px}
+.todo{margin:10px 16px 0;background:var(--surface-2);border-left:4px solid var(--accent);border-radius:0 8px 8px 0;padding:9px 14px;font-size:14.5px}
+.todo b{font-size:12px;letter-spacing:.06em;color:var(--accent);margin-right:8px}
+
+.diagram{padding:14px 16px 4px}
+.dwrap{overflow-x:auto;border:1px solid var(--line-soft);border-radius:10px;background:var(--surface)}
+.dwrap svg{display:block;width:100%;min-width:760px;height:auto}
+.scroll-hint{display:none;font-size:12px;color:var(--faint);margin:6px 2px 0}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;padding:8px 16px 14px;font-size:12px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{display:inline-block;width:14px;height:14px;border-radius:4px;border:2px solid;background:var(--surface)}
+
+/* svg */
+svg text{paint-order:stroke;stroke:var(--surface);stroke-width:3px;stroke-linejoin:round;font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic UI","Meiryo",system-ui,sans-serif}
+.el rect{transition:stroke .3s ease}
+.s-aws rect{fill:none;stroke:var(--ink);stroke-width:1.6}
+.s-aws text.t{fill:var(--ink);font-weight:800;font-size:14px}
+.s-region rect{fill:var(--region-bg);stroke:var(--region);stroke-width:1.6;stroke-dasharray:7 4}
+.s-region text.t{fill:var(--region);font-weight:700;font-size:13px}
+.s-vpc rect{fill:var(--vpc-bg);stroke:var(--vpc);stroke-width:2}
+.s-vpc text.t{fill:var(--vpc);font-weight:700;font-size:13px}
+.s-az rect{fill:none;stroke:var(--faint);stroke-width:1.4;stroke-dasharray:4 4}
+.s-az text.t{fill:var(--muted);font-weight:700;font-size:12px}
+.s-pub rect{fill:var(--pub-bg);stroke:var(--pub);stroke-width:1.4}
+.s-pub text.t{fill:var(--pub);font-weight:700;font-size:12px}
+.s-priv rect{fill:var(--priv-bg);stroke:var(--priv);stroke-width:1.4}
+.s-priv text.t{fill:var(--priv);font-weight:700;font-size:12px}
+text.cidr{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;fill:var(--muted)}
+.s-asg rect{fill:none;stroke:var(--c-compute);stroke-width:1.6;stroke-dasharray:6 4}
+.s-asg text.t{fill:var(--c-compute);font-weight:700;font-size:12px}
+.svc rect{fill:var(--surface);stroke-width:2}
+.svc text.t{fill:var(--ink);font-weight:700;font-size:13.5px;text-anchor:middle}
+.svc text.sub{fill:var(--muted);font-size:11px;text-anchor:middle}
+.cat-compute rect{stroke:var(--c-compute)} .cat-network rect{stroke:var(--c-network)}
+.cat-db rect{stroke:var(--c-db)} .cat-storage rect{stroke:var(--c-storage)}
+.cat-security rect{stroke:var(--c-security)} .cat-mgmt rect{stroke:var(--c-mgmt)}
+.actor rect{fill:var(--surface-2);stroke:var(--muted);stroke-width:1.4;stroke-dasharray:3 3}
+.actor text.t{fill:var(--ink);font-weight:700;font-size:13px;text-anchor:middle}
+.actor text.sub{fill:var(--muted);font-size:11px;text-anchor:middle}
+.badge rect{fill:var(--surface);stroke:var(--c-security);stroke-width:1.6}
+.badge text.t{fill:var(--c-security);font:800 10.5px ui-monospace,Menlo,monospace;text-anchor:middle}
+.note text{fill:var(--faint);font-size:11.5px}
+.rline line{stroke:var(--c-db);stroke-width:2;stroke-dasharray:5 4}
+.rline text{fill:var(--c-db);font-size:11px;font-weight:700;text-anchor:middle}
+.el.new rect{stroke:var(--hl)!important;stroke-width:3!important}
+.el.new rect.halo{fill:none;stroke:var(--hl-soft)!important;stroke-width:10!important}
+.el.new line{stroke:var(--hl)}
+.flow path{fill:none;stroke:var(--hl);stroke-width:2.6}
+.flow circle{fill:var(--hl)}
+.flow text{stroke:none;fill:#fff;font:800 12px ui-monospace,Menlo,monospace;text-anchor:middle;dominant-baseline:central}
+@media (prefers-reduced-motion:no-preference){
+  .el.new{animation:pop .9s ease-out 1}
+  .flow path{stroke-dasharray:7 5;animation:dash 1.2s linear infinite}
+}
+@keyframes pop{0%{opacity:0}100%{opacity:1}}
+@keyframes dash{to{stroke-dashoffset:-24}}
+
+.explain{padding:6px 16px 16px;display:grid;gap:12px}
+.explain p{margin:0}
+.what{font-size:15.5px}
+.flowlist{margin:0;padding-left:0;list-style:none;display:grid;gap:6px}
+.flowlist li{display:flex;gap:10px;align-items:baseline}
+.flowlist .num{flex:none;width:22px;height:22px;border-radius:50%;background:var(--hl);color:#fff;font:800 12px/22px ui-monospace,Menlo,monospace;text-align:center}
+.cmp{background:var(--surface-2);border-left:4px solid var(--faint);border-radius:0 8px 8px 0;padding:10px 14px;font-size:14px}
+.cmp b,.cost b{font-size:12px;letter-spacing:.06em;color:var(--muted);display:block}
+.cost{border:1px solid var(--line);border-radius:8px;padding:10px 14px;font-size:14px}
+.cost.warn{border-color:#c2410c;background:var(--hl-soft)}
+.cost.warn b{color:#c2410c}
+.terms h4{margin:0 0 6px;font-size:14px}
+.terms table{width:100%;border-collapse:collapse;font-size:14px}
+.terms td{padding:7px 8px;border-top:1px solid var(--line-soft);vertical-align:top}
+.terms td:first-child{width:32%;font-weight:700}
+.nav{display:flex;justify-content:space-between;gap:10px;padding:12px 16px;border-top:1px solid var(--line-soft);background:var(--surface-2)}
+.btn{font:inherit;font-weight:700;font-size:14px;padding:9px 18px;border-radius:8px;border:1px solid var(--line);
+  background:var(--surface);color:var(--ink);cursor:pointer;min-height:44px}
+.btn.primary{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.btn:disabled{opacity:.4;cursor:default}
+.hint{font-size:12px;color:var(--faint);align-self:center}
+
+.sheet{margin-top:34px}
+.tblwrap{overflow-x:auto}
+.sheet table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--line);font-size:14px;min-width:620px}
+.sheet th,.sheet td{text-align:left;padding:9px 12px;border-top:1px solid var(--line-soft);vertical-align:top}
+.sheet th{background:var(--surface-2);font-size:12.5px;color:var(--muted);border-top:0}
+.refs{margin-top:34px;font-size:13.5px}
+.refs ul{margin:0;padding-left:1.2em}
+.refs li{margin:2px 0;overflow-wrap:anywhere}
+footer{margin-top:36px;padding-top:14px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+@media (max-width:760px){ .scroll-hint{display:block} }
+@media (max-width:560px){
+  .dots{margin-left:0}
+  .terms td:first-child{width:auto}
+  .terms tr{display:grid}
+  .terms td{border-top:0;padding:2px 4px}
+  .terms tr+tr td:first-child{border-top:1px solid var(--line-soft);padding-top:8px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="head">
+    <p class="crumb"><a href="../">← 教材一覧</a></p>
+    <p class="eyebrow">オンプレ経験者のための AWS 図解</p>
+    <h1>見えるAWS</h1>
+    <p class="lede">AWS の基本の部品を1つずつ足しながら、Web アプリの構成図ができていく様子を見ます。各ステップで「何を足したか」「オンプレだと何に当たるか」「料金がかかるところ」を確かめます。</p>
+  </header>
+
+  <section aria-labelledby="diff-h">
+    <h2 class="sec-title" id="diff-h">オンプレから来た人が押さえる3つの違い</h2>
+    <p class="sec-sub">ここだけ先に押さえると、下の図が読みやすくなります。</p>
+    <div class="cards">
+      <div class="card"><div class="n">違い 1</div><h3>「買う」ではなく「借りる」</h3>
+        <p>使った時間や量だけ料金がかかります。置いてあるだけで料金がかかるもの（NAT ゲートウェイ、パブリック IPv4 アドレス、停止中の EC2 のディスクなど）もあるので、使い終わったら消します。</p></div>
+      <div class="card"><div class="n">違い 2</div><h3>障害への強さは「置き方」で決まる</h3>
+        <p>AWS に置けば自動で冗長化されるわけではありません。2つ以上のアベイラビリティゾーン（AZ）に分けて置く構成にして、初めて障害に強くなります。</p></div>
+      <div class="card"><div class="n">違い 3</div><h3>ネットワークも権限も、全部「設定」</h3>
+        <p>ケーブルや機器の代わりに、VPC・ルートテーブル・セキュリティグループ・IAM の設定で決まります。設定の誤りが、そのまま穴になります。</p></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="scene-h">
+    <h2 class="sec-title" id="scene-h">場面1：Web アプリを1つ AWS に載せる</h2>
+    <p class="sec-sub">何もない状態から部品を1つずつ足して、よくある構成（ロードバランサー＋2台のサーバー＋データベース）を作ります。</p>
+
+    <div class="player" id="player">
+      <div class="bar">
+        <span class="scene">ステップ</span>
+        <span class="count" id="count"></span>
+        <nav class="dots" id="dots" aria-label="ステップ一覧"></nav>
+      </div>
+      <div class="step-title" id="stitle"></div>
+      <div class="todo" id="todo"></div>
+      <div class="diagram">
+        <div class="dwrap" id="dwrap"></div>
+        <p class="scroll-hint">図は横にスクロールできます。</p>
+      </div>
+      <div class="legend">
+        <span><i class="sw" style="border-color:var(--c-compute)"></i>サーバー</span>
+        <span><i class="sw" style="border-color:var(--c-network)"></i>ネットワーク</span>
+        <span><i class="sw" style="border-color:var(--c-db)"></i>データベース</span>
+        <span><i class="sw" style="border-color:var(--c-storage)"></i>ストレージ</span>
+        <span><i class="sw" style="border-color:var(--c-security)"></i>セキュリティ</span>
+        <span><i class="sw" style="border-color:var(--c-mgmt)"></i>監視</span>
+        <span><i class="sw" style="border-color:var(--hl);background:var(--hl-soft)"></i>このステップで足したもの</span>
+      </div>
+      <div class="explain">
+        <div id="what"></div>
+        <div class="cmp" id="cmp"></div>
+        <div id="cost"></div>
+        <div class="terms" id="terms"></div>
+      </div>
+      <div class="nav">
+        <button class="btn" id="prev" type="button">◀ 前へ</button>
+        <span class="hint">キーボードの ← → でも進めます</span>
+        <button class="btn primary" id="next" type="button">次へ ▶</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="sheet" aria-labelledby="sheet-h">
+    <h2 class="sec-title" id="sheet-h">早見表：この場面に出てきたサービス</h2>
+    <p class="sec-sub">料金は「主に何で決まるか」だけを書いています。金額はリージョンや時期で変わるので、公式の料金ページで確かめてください。</p>
+    <div class="tblwrap"><table>
+      <thead><tr><th>サービス</th><th>ひと言で</th><th>オンプレだと</th><th>料金の主な決まり方</th></tr></thead>
+      <tbody id="sheet"></tbody>
+    </table></div>
+  </section>
+
+  <section class="refs" aria-labelledby="refs-h">
+    <h2 class="sec-title" id="refs-h">出典（AWS 公式ドキュメント）</h2>
+    <ul id="refs"></ul>
+  </section>
+
+  <footer>作成：コータロー。説明は AWS の公式ドキュメントで確かめています（2026年10月時点）。</footer>
+</div>
+
+<script type="application/json" id="scenario">
+{
+ "elements": {
+  "users": {
+   "kind": "actor",
+   "x": 40,
+   "y": 12,
+   "w": 230,
+   "h": 46,
+   "label": "利用者（ブラウザ）",
+   "sub": "インターネット"
+  },
+  "aws": {
+   "kind": "s-aws",
+   "x": 20,
+   "y": 72,
+   "w": 960,
+   "h": 640,
+   "label": "AWS クラウド（自分の AWS アカウント）"
+  },
+  "iam": {
+   "kind": "svc",
+   "cat": "security",
+   "x": 40,
+   "y": 104,
+   "w": 150,
+   "h": 46,
+   "label": "IAM",
+   "sub": "誰が何をできるか"
+  },
+  "route53": {
+   "kind": "svc",
+   "cat": "network",
+   "x": 206,
+   "y": 104,
+   "w": 150,
+   "h": 46,
+   "label": "Route 53",
+   "sub": "DNS"
+  },
+  "globalnote": {
+   "kind": "note",
+   "x": 400,
+   "y": 132,
+   "label": "IAM と Route 53 は、リージョンを選ばずに設定する"
+  },
+  "region": {
+   "kind": "s-region",
+   "x": 40,
+   "y": 164,
+   "w": 920,
+   "h": 532,
+   "label": "リージョン（例：東京 ap-northeast-1）"
+  },
+  "regionnote": {
+   "kind": "note",
+   "x": 796,
+   "y": 212,
+   "label": "VPC の外にあるサービス"
+  },
+  "s3": {
+   "kind": "svc",
+   "cat": "storage",
+   "x": 796,
+   "y": 222,
+   "w": 148,
+   "h": 46,
+   "label": "S3",
+   "sub": "ファイル置き場"
+  },
+  "cw": {
+   "kind": "svc",
+   "cat": "mgmt",
+   "x": 796,
+   "y": 280,
+   "w": 148,
+   "h": 46,
+   "label": "CloudWatch",
+   "sub": "監視・ログ"
+  },
+  "acm": {
+   "kind": "svc",
+   "cat": "security",
+   "x": 796,
+   "y": 338,
+   "w": 148,
+   "h": 46,
+   "label": "ACM",
+   "sub": "SSL/TLS 証明書"
+  },
+  "vpc": {
+   "kind": "s-vpc",
+   "x": 56,
+   "y": 208,
+   "w": 724,
+   "h": 472,
+   "label": "VPC 10.0.0.0/16"
+  },
+  "igw": {
+   "kind": "svc",
+   "cat": "network",
+   "x": 322,
+   "y": 193,
+   "w": 196,
+   "h": 30,
+   "label": "インターネットゲートウェイ"
+  },
+  "az1": {
+   "kind": "s-az",
+   "x": 72,
+   "y": 238,
+   "w": 344,
+   "h": 426,
+   "label": "AZ 1"
+  },
+  "az2": {
+   "kind": "s-az",
+   "x": 424,
+   "y": 238,
+   "w": 344,
+   "h": 426,
+   "label": "AZ 2"
+  },
+  "pub1": {
+   "kind": "s-pub",
+   "x": 86,
+   "y": 264,
+   "w": 316,
+   "h": 100,
+   "label": "パブリックサブネット",
+   "cidr": "10.0.1.0/24"
+  },
+  "pub2": {
+   "kind": "s-pub",
+   "x": 438,
+   "y": 264,
+   "w": 316,
+   "h": 100,
+   "label": "パブリックサブネット",
+   "cidr": "10.0.2.0/24"
+  },
+  "app1": {
+   "kind": "s-priv",
+   "x": 86,
+   "y": 376,
+   "w": 316,
+   "h": 130,
+   "label": "プライベートサブネット（アプリ）",
+   "cidr": "10.0.11.0/24"
+  },
+  "app2": {
+   "kind": "s-priv",
+   "x": 438,
+   "y": 376,
+   "w": 316,
+   "h": 130,
+   "label": "プライベートサブネット（アプリ）",
+   "cidr": "10.0.12.0/24"
+  },
+  "db1": {
+   "kind": "s-priv",
+   "x": 86,
+   "y": 518,
+   "w": 316,
+   "h": 132,
+   "label": "プライベートサブネット（DB）",
+   "cidr": "10.0.21.0/24"
+  },
+  "db2": {
+   "kind": "s-priv",
+   "x": 438,
+   "y": 518,
+   "w": 316,
+   "h": 132,
+   "label": "プライベートサブネット（DB）",
+   "cidr": "10.0.22.0/24"
+  },
+  "asg": {
+   "kind": "s-asg",
+   "x": 150,
+   "y": 404,
+   "w": 594,
+   "h": 92,
+   "label": "Auto Scaling グループ"
+  },
+  "nat": {
+   "kind": "svc",
+   "cat": "network",
+   "x": 100,
+   "y": 298,
+   "w": 124,
+   "h": 48,
+   "label": "NAT ゲートウェイ",
+   "sub": "外への出口"
+  },
+  "alb": {
+   "kind": "svc",
+   "cat": "network",
+   "x": 250,
+   "y": 300,
+   "w": 470,
+   "h": 44,
+   "label": "ALB（ロードバランサー）",
+   "sub": "2つの AZ にまたがって受ける"
+  },
+  "ec2a": {
+   "kind": "svc",
+   "cat": "compute",
+   "x": 176,
+   "y": 432,
+   "w": 140,
+   "h": 50,
+   "label": "EC2",
+   "sub": "アプリのサーバー"
+  },
+  "ec2b": {
+   "kind": "svc",
+   "cat": "compute",
+   "x": 528,
+   "y": 432,
+   "w": 140,
+   "h": 50,
+   "label": "EC2",
+   "sub": "アプリのサーバー"
+  },
+  "rds1": {
+   "kind": "svc",
+   "cat": "db",
+   "x": 176,
+   "y": 572,
+   "w": 140,
+   "h": 50,
+   "label": "RDS（本番）",
+   "sub": "PostgreSQL など"
+  },
+  "rds2": {
+   "kind": "svc",
+   "cat": "db",
+   "x": 528,
+   "y": 572,
+   "w": 140,
+   "h": 50,
+   "label": "RDS（スタンバイ）",
+   "sub": "同期して待機"
+  },
+  "repl": {
+   "kind": "rline",
+   "x1": 316,
+   "y1": 597,
+   "x2": 528,
+   "y2": 597,
+   "label": "同期"
+  },
+  "sg-ec2a": {
+   "kind": "badge",
+   "x": 290,
+   "y": 423,
+   "w": 34,
+   "h": 18,
+   "label": "SG"
+  },
+  "sg-ec2b": {
+   "kind": "badge",
+   "x": 642,
+   "y": 423,
+   "w": 34,
+   "h": 18,
+   "label": "SG"
+  },
+  "sg-alb": {
+   "kind": "badge",
+   "x": 694,
+   "y": 291,
+   "w": 34,
+   "h": 18,
+   "label": "SG"
+  },
+  "sg-rds": {
+   "kind": "badge",
+   "x": 290,
+   "y": 563,
+   "w": 34,
+   "h": 18,
+   "label": "SG"
+  }
+ },
+ "flows": [
+  {
+   "n": "1",
+   "d": "M270 46 L380 46 L380 127 L356 127",
+   "at": [
+    380,
+    86
+   ]
+  },
+  {
+   "n": "2",
+   "d": "M270 26 L600 26 L600 208 L518 208 M440 223 L470 300",
+   "at": [
+    600,
+    100
+   ]
+  },
+  {
+   "n": "3",
+   "d": "M400 344 L246 432 M570 344 L598 432",
+   "at": [
+    485,
+    358
+   ]
+  },
+  {
+   "n": "4",
+   "d": "M246 482 L246 572",
+   "at": [
+    262,
+    512
+   ]
+  },
+  {
+   "n": "5",
+   "d": "M668 457 L786 457 L786 245 L796 245",
+   "at": [
+    728,
+    446
+   ]
+  },
+  {
+   "n": "6",
+   "d": "M176 457 L140 457 L140 346 M140 298 L140 214 L322 214",
+   "at": [
+    140,
+    420
+   ]
+  }
+ ],
+ "steps": [
+  {
+   "title": "AWS アカウントを作る",
+   "add": [
+    "aws"
+   ],
+   "todo": "AWS アカウントを作り、ルートユーザーに多要素認証（MFA）を設定する（MFA は必須）",
+   "what": "AWS アカウントは、作ったリソースと料金がまとまる単位です。最初にできるルートユーザーはすべての操作ができるので、普段の作業には使いません。ルートユーザーへの MFA の設定は必須です。AWS では、クラウドそのもの（建物・ハードウェア・基盤のソフトウェア）は AWS が守り、その上に置くもの（データ・アクセス権・設定、EC2 なら OS から上）は利用者が守る、という分担になっています（責任共有モデル）。",
+   "cmp": "データセンターと契約し、ラックや回線を用意するところから始まります。AWS では、アカウントを作ればすぐに使い始められます。",
+   "cost": "使った分だけ請求されます。最初に AWS Budgets で予算を決め、超えそうなときに通知が来るようにしておくと安心です（通知が来るだけで、利用は自動では止まりません）。無料利用枠の条件は時期によって変わるので、公式ページで確かめます。",
+   "terms": [
+    [
+     "ルートユーザー",
+     "アカウントを作ったメールアドレスでログインするユーザー。すべての権限を持つ"
+    ],
+    [
+     "責任共有モデル",
+     "AWS が守る範囲と、利用者が守る範囲の分担"
+    ],
+    [
+     "アカウント ID",
+     "アカウントを見分ける12桁の番号"
+    ]
+   ]
+  },
+  {
+   "title": "リージョンとアベイラビリティゾーン（AZ）を選ぶ",
+   "add": [
+    "region",
+    "az1",
+    "az2"
+   ],
+   "todo": "画面右上でリージョン（例：アジアパシフィック（東京））を選ぶ",
+   "what": "リージョンは、AWS のデータセンターがある地域です。リソースは基本的にリージョンごとに作られます。1つのリージョンの中には、アベイラビリティゾーン（AZ）と呼ばれる、互いに離れた独立した区画が、原則3つ以上あります。AZ は1つ以上のデータセンターでできていて、電源やネットワークが分かれているため、1つの AZ が止まっても他の AZ は動き続けます。障害に備えて、サーバーは2つ以上の AZ に分けて置くのが基本です。",
+   "cmp": "災害に備えて別の拠点にデータセンターを持つのは大がかりで高くつきます。AWS では、置く AZ を選ぶだけで別の場所に置けます。",
+   "cost": "同じサービスでも、リージョンによって料金が違います。",
+   "terms": [
+    [
+     "リージョン",
+     "地域。例：東京（ap-northeast-1）、大阪（ap-northeast-3）"
+    ],
+    [
+     "アベイラビリティゾーン（AZ）",
+     "リージョン内の独立した区画。1つ以上のデータセンターでできている"
+    ],
+    [
+     "マルチ AZ",
+     "2つ以上の AZ に分けて置くこと。1つの AZ の障害に耐えられる"
+    ]
+   ]
+  },
+  {
+   "title": "IAM で「誰が何をできるか」を決める",
+   "add": [
+    "iam",
+    "globalnote"
+   ],
+   "todo": "作業用のユーザーを作り、必要な権限だけを付ける（人が使うユーザーは IAM Identity Center で作るのが推奨されている）",
+   "what": "IAM は、「誰が」「どのリソースに」「何をしてよいか」を決めるサービスです。権限はポリシー（JSON で書く許可・拒否のルール）として、ユーザーやグループ、ロールに付けます。ロールは、EC2 などのサービスやほかのアカウントに、一時的な権限を渡すための仕組みです。プログラムには長く有効なアクセスキーを持たせず、ロールで権限を渡すのが基本です。IAM のユーザー・ロール・ポリシーはリージョンを問わず、アカウント全体で共通です。",
+   "cmp": "Active Directory のユーザーと、フォルダやサーバーへのアクセス権の設定に当たります。",
+   "cost": "IAM は無料です。",
+   "terms": [
+    [
+     "ポリシー",
+     "許可・拒否のルール。JSON で書く"
+    ],
+    [
+     "ロール",
+     "サービスやほかのアカウントに一時的に渡す権限のセット"
+    ],
+    [
+     "最小権限",
+     "必要な操作だけを許可すること"
+    ]
+   ]
+  },
+  {
+   "title": "VPC で自分専用のネットワークを作る",
+   "add": [
+    "vpc"
+   ],
+   "todo": "VPC を作る（IPv4 CIDR：10.0.0.0/16）",
+   "what": "VPC は、AWS の中に作る自分専用の仮想ネットワークです。使う IP アドレスの範囲を CIDR で決めます（10.0.0.0/16 なら 10.0.0.0〜10.0.255.255 の 65,536 個）。VPC は1つのリージョンの中に作り、そのリージョンのすべての AZ にまたがります。作っただけでは、インターネットとはつながっていません。なお、アカウントには最初から「デフォルト VPC」があり、そのサブネットはすべてパブリックです。この図では、自分で作る VPC を使います。",
+   "cmp": "社内ネットワーク（LAN）を1つ用意して、使う IP アドレスの範囲を決めるのに当たります。",
+   "cost": "VPC 自体は無料です。中に置くもの（NAT ゲートウェイなど）に料金がかかります。",
+   "terms": [
+    [
+     "VPC",
+     "Virtual Private Cloud。自分専用の仮想ネットワーク"
+    ],
+    [
+     "CIDR",
+     "IP アドレスの範囲の書き方。/16 は先頭の16ビットが固定という意味"
+    ]
+   ]
+  },
+  {
+   "title": "サブネットとインターネットゲートウェイを作る",
+   "add": [
+    "pub1",
+    "pub2",
+    "app1",
+    "app2",
+    "igw",
+    "users"
+   ],
+   "todo": "AZ ごとにサブネットを作り、インターネットゲートウェイを VPC に付けて、パブリックサブネットのルートテーブルに「0.0.0.0/0 → インターネットゲートウェイ」を足す",
+   "what": "サブネットは、VPC の IP アドレス範囲を小さく区切ったもので、1つのサブネットは1つの AZ に属します。インターネットゲートウェイは、VPC とインターネットをつなぐ出入口です。ルートテーブルにインターネットゲートウェイへの経路があるサブネットを「パブリックサブネット」、ないサブネットを「プライベートサブネット」と呼びます。外から直接受けるもの（ロードバランサーなど）はパブリックに、アプリやデータベースはプライベートに置くのが基本です。",
+   "cmp": "ネットワークを VLAN（セグメント）で分け、外部公開用の DMZ と社内用を分けるのに当たります。",
+   "cost": "サブネットとインターネットゲートウェイは無料です。インターネットへ送るデータの量と、パブリック IPv4 アドレス（1つごとに時間単位。2024年2月から）には料金がかかります。",
+   "terms": [
+    [
+     "サブネット",
+     "VPC を区切った範囲。1つの AZ に属する"
+    ],
+    [
+     "インターネットゲートウェイ",
+     "VPC とインターネットの出入口"
+    ],
+    [
+     "ルートテーブル",
+     "通信の行き先を決める表。サブネットごとに使う"
+    ],
+    [
+     "パブリック／プライベート",
+     "インターネットゲートウェイへの経路が「ある／ない」の違い"
+    ],
+    [
+     "予約アドレス",
+     "各サブネットの先頭4つと最後の1つの IP アドレスは AWS が使うため、サーバーには割り当てられない"
+    ]
+   ]
+  },
+  {
+   "title": "EC2 でサーバーを立てる",
+   "add": [
+    "ec2a"
+   ],
+   "todo": "AMI とインスタンスタイプを選び、プライベートサブネットに EC2 インスタンスを起動する",
+   "what": "EC2 は仮想サーバーです。OS などの元になるイメージ（AMI）と、CPU・メモリの大きさ（インスタンスタイプ。例：t3.micro）を選んで起動します。ディスクは EBS というボリュームとして付きます。このサーバーはプライベートサブネットに置いたので、まだインターネットからは届きません。外からの入口は、あとでロードバランサーを置いて作ります。",
+   "cmp": "仮想化基盤（VMware など）に VM を1台作るのに近い操作です。物理サーバーの調達に何週間もかかっていたものが、数分で用意できます。",
+   "cost": "動かしている時間で料金がかかります。停止するとインスタンスの料金は止まりますが、EBS の保存料金はかかり続けます。",
+   "terms": [
+    [
+     "AMI",
+     "サーバーの元になるイメージ（OS や初期設定）"
+    ],
+    [
+     "インスタンスタイプ",
+     "CPU とメモリの組み合わせ。t3.micro、m7g.large など（m7g は Arm の CPU なので、Arm 用の AMI を使う）"
+    ],
+    [
+     "EBS",
+     "EC2 に付けるディスク（ブロックストレージ）"
+    ]
+   ]
+  },
+  {
+   "title": "セキュリティグループで通信を絞る",
+   "add": [
+    "sg-ec2a"
+   ],
+   "todo": "セキュリティグループを作って EC2 に付け、受け入れるポートと送信元だけを許可する",
+   "what": "セキュリティグループ（SG）は、インスタンスごとに付けるファイアウォールです。書けるのは「許可」のルールだけで、書いていない通信は通りません。自分で作った直後は、受信は何も許可されておらず、送信はすべて許可されています（VPC に最初からある「default」という SG は、既定のルールが違います）。ステートフルなので、許可した通信の戻りは自動で通ります。送信元には IP アドレスの範囲だけでなく、別のセキュリティグループも指定できます（例：「ロードバランサーの SG からの 80 番だけ許可」）。サブネット単位のネットワーク ACL もありますが、こちらはステートレスで、拒否のルールも書けます。",
+   "cmp": "サーバーごとのファイアウォール（iptables や Windows ファイアウォール）の設定に当たります。",
+   "cost": "セキュリティグループは無料です。",
+   "terms": [
+    [
+     "セキュリティグループ（SG）",
+     "インスタンスなどに付けるファイアウォール。許可だけを書く"
+    ],
+    [
+     "ステートフル",
+     "行きの通信を許可すれば、戻りは自動で通る"
+    ],
+    [
+     "ネットワーク ACL",
+     "サブネット単位のファイアウォール。ステートレスで、拒否も書ける"
+    ]
+   ]
+  },
+  {
+   "title": "NAT ゲートウェイで外へ出られるようにする",
+   "add": [
+    "nat"
+   ],
+   "todo": "パブリックサブネットに NAT ゲートウェイを作り、プライベートサブネットのルートテーブルに「0.0.0.0/0 → NAT ゲートウェイ」を足す",
+   "what": "プライベートサブネットのサーバーも、OS の更新や外部 API の呼び出しのために外へ出たいことがあります。NAT ゲートウェイは、プライベートサブネットから外へ出る通信を通す出口です。インターネット側から、この出口を通って中のサーバーへ接続を始めることはできません。従来型の NAT ゲートウェイは AZ ごとに1つずつ置くのが基本で、この図は従来型を1つだけ置いた形です。2025年11月からは、1つで複数の AZ をカバーし、パブリックサブネットに置く必要もない「リージョン型」も選べるようになり、AWS はこちらを勧めています。",
+   "cmp": "社内ネットワークから外へ出るときに通る、NAT ルーターやプロキシに当たります。",
+   "cost": "作っておくだけで時間単位の料金がかかり、通したデータの量にも料金がかかります。学習用に作ったときは、使い終わったら消すのを忘れないようにします。",
+   "costWarn": true,
+   "terms": [
+    [
+     "NAT ゲートウェイ",
+     "プライベートサブネットから外へ出るための出口"
+    ]
+   ]
+  },
+  {
+   "title": "RDS でデータベースを用意する",
+   "add": [
+    "db1",
+    "db2",
+    "rds1",
+    "rds2",
+    "repl",
+    "sg-rds"
+   ],
+   "todo": "DB サブネットグループ（2つの AZ のサブネット）を作り、RDS（例：PostgreSQL）をマルチ AZ で作る",
+   "what": "RDS は、AWS が運用を引き受けるデータベースです。MySQL や PostgreSQL などを選べて、パッチの適用、バックアップ、障害時の切り替えを AWS が行います。置き場所は DB サブネットグループで指定し、2つ以上の AZ のサブネットを含める必要があります。マルチ AZ にすると、別の AZ に待機用のスタンバイが作られて同期し、本番側に障害が起きると自動で切り替わります。ここで扱う「マルチ AZ の DB インスタンス」では、スタンバイは読み取りには使えません。セキュリティグループでは、アプリのサーバーの SG からの接続だけを許可します。",
+   "cmp": "DB サーバーを本番と待機の2台用意し、パッチ適用・バックアップ・切り替えの手順を自分で運用するのに当たります。",
+   "cost": "インスタンスが動いている時間と、ストレージの容量で料金がかかります。マルチ AZ にすると、スタンバイの分も料金がかかります。",
+   "terms": [
+    [
+     "RDS",
+     "運用を AWS が引き受けるデータベース（MySQL、PostgreSQL など）"
+    ],
+    [
+     "DB サブネットグループ",
+     "RDS を置いてよいサブネットの組。2つ以上の AZ が必要"
+    ],
+    [
+     "マルチ AZ（DB インスタンス）",
+     "別の AZ に同期したスタンバイを置き、障害時に自動で切り替える構成"
+    ]
+   ]
+  },
+  {
+   "title": "S3 にファイルを置く",
+   "add": [
+    "s3",
+    "regionnote"
+   ],
+   "todo": "S3 バケットを作り、EC2 に「S3 を読み書きできる IAM ロール」を付ける",
+   "what": "S3 は、ファイル（オブジェクト）を保存するサービスです。入れ物をバケットと呼び、中のファイルはフォルダではなく「キー」（例：images/2026/photo.jpg）で管理して、HTTP で読み書きします。保存できる総量に上限はなく、使った分だけ料金がかかります。S3 は VPC の外にある、リージョンのサービスです。プライベートサブネットの EC2 からは、NAT ゲートウェイか VPC エンドポイント（S3 用のゲートウェイ型は追加料金なし）を通って届きます。権限はアクセスキーを置かずに IAM ロールで渡します。2023年4月からは、新しく作ったバケットは既定でパブリックアクセスがブロックされています。",
+   "cmp": "ファイルサーバー（NAS）に当たります。ただし容量の増設は不要で、フォルダの共有ではなく HTTP で読み書きする点が違います。",
+   "cost": "保存した容量、リクエストの回数、インターネットへのデータ転送量で料金がかかります。",
+   "terms": [
+    [
+     "バケット",
+     "S3 の入れ物。名前は、既定ではすべての AWS アカウントの中で重複できない"
+    ],
+    [
+     "オブジェクト／キー",
+     "保存したファイルと、その名前（パス）"
+    ],
+    [
+     "ブロックパブリックアクセス",
+     "バケットが誤って公開されないようにする設定。新しいバケットでは既定で有効（2023年4月から）"
+    ]
+   ]
+  },
+  {
+   "title": "ロードバランサーで入口を作り、2台目を置く",
+   "add": [
+    "alb",
+    "ec2b",
+    "sg-ec2b",
+    "sg-alb"
+   ],
+   "todo": "2つの AZ のパブリックサブネットに ALB を作り、2つの AZ の EC2 を振り分け先として登録する",
+   "what": "ALB（Application Load Balancer）は、利用者からの HTTP/HTTPS のリクエストを受けて、後ろのサーバーに振り分けます。作るときは、2つ以上の AZ のサブネットを指定する必要があります。ヘルスチェックで応答しないサーバーには振り分けないので、AZ 1 の EC2 が止まっても AZ 2 の EC2 で動き続けます。EC2 はプライベートサブネットのまま、外から届くのは ALB だけです。EC2 の SG は「ALB の SG からの通信だけ許可」にします。",
+   "cmp": "負荷分散装置（ロードバランサー）を置き、サーバーを複数台並べる構成に当たります。",
+   "cost": "動いている時間と、処理量（LCU という単位）で料金がかかります。インターネット向けの ALB には、パブリック IPv4 アドレスの料金もかかります。",
+   "terms": [
+    [
+     "ALB",
+     "HTTP/HTTPS 用のロードバランサー"
+    ],
+    [
+     "ターゲットグループ",
+     "ALB が振り分ける先のサーバーの組"
+    ],
+    [
+     "ヘルスチェック",
+     "サーバーが応答するかを定期的に確かめる仕組み。すべてのサーバーが異常なときは、例外として全部に振り分ける"
+    ]
+   ]
+  },
+  {
+   "title": "Auto Scaling で台数を自動で保つ",
+   "add": [
+    "asg"
+   ],
+   "todo": "起動テンプレートを作り、Auto Scaling グループ（例：最小2台・最大4台、2つの AZ）を作って ALB とつなぐ",
+   "what": "Auto Scaling グループは、決めた範囲（最小・最大・希望の台数）で EC2 の台数を保ちます。CPU 使用率などに応じて台数を増減でき、異常になったインスタンスは自動で入れ替えられます（既定で見るのは EC2 自体の状態だけで、ALB のヘルスチェックの結果も使うには、グループ側で設定を有効にします）。サーバーは「直して使い続ける」より「壊れたら入れ替える」前提になるので、データはサーバーの中だけに持たず、RDS や S3 に置く作りにします。",
+   "cmp": "ピーク時に合わせて台数を見積もり、先に買っておくのが普通です。AWS では必要なときだけ増やせます。",
+   "cost": "Auto Scaling 自体は無料で、起動した EC2 などの料金がかかります。",
+   "terms": [
+    [
+     "Auto Scaling グループ",
+     "EC2 の台数を範囲内で自動で保ち、増減させる仕組み"
+    ],
+    [
+     "起動テンプレート",
+     "新しく作るインスタンスの設定（AMI・タイプ・SG など）"
+    ],
+    [
+     "スケールアウト／イン",
+     "台数を増やす／減らすこと"
+    ]
+   ]
+  },
+  {
+   "title": "ドメイン名と HTTPS を付ける",
+   "add": [
+    "route53",
+    "acm"
+   ],
+   "todo": "Route 53 でドメイン名（例：app.example.com）を ALB に向け、ACM で証明書を発行して ALB の HTTPS（443番）に付ける",
+   "what": "Route 53 は DNS のサービスです。ドメイン名を ALB に向けるレコードを作ると、利用者は覚えやすい名前でアクセスできます。ALB のように裏の IP アドレスが変わりうる相手には「エイリアス」レコードを使います。ACM は SSL/TLS 証明書を発行・管理するサービスで、ALB などで使う公開証明書は無料で発行でき、DNS で検証した証明書は自動で更新されます。ACM はリージョンのサービスなので、ALB と同じリージョンで証明書を作ります。",
+   "cmp": "DNS サーバーへのレコード登録と、証明書の購入・期限前の更新作業に当たります。",
+   "cost": "Route 53 はホストゾーンの数と問い合わせの回数で料金がかかります（ALB などへのエイリアスへの問い合わせは無料）。ACM の公開証明書は、ALB などで使う分には無料です（取り出してほかのサーバーで使える証明書は有料）。",
+   "terms": [
+    [
+     "Route 53",
+     "DNS のサービス。ドメインの登録もできる"
+    ],
+    [
+     "エイリアスレコード",
+     "ALB など AWS のリソースに名前を向ける、Route 53 独自のレコード"
+    ],
+    [
+     "ACM",
+     "SSL/TLS 証明書を発行し、自動で更新するサービス（DNS で検証した場合）"
+    ]
+   ]
+  },
+  {
+   "title": "CloudWatch で見張る",
+   "add": [
+    "cw"
+   ],
+   "todo": "CloudWatch で CPU 使用率などのアラームを作り、ログを集める",
+   "what": "CloudWatch は、メトリクス（CPU 使用率などの数値）、ログ、アラームをまとめて扱う監視のサービスです。EC2 の CPU 使用率やネットワークの量は何も入れなくても集まりますが、メモリの使用率やディスクの空き容量は、CloudWatch エージェントを入れないと取れません。アラームは通知のほか、Auto Scaling で台数を増やすきっかけにも使えます。",
+   "cmp": "監視ツール（Zabbix など）でサーバーを見張り、しきい値を超えたら通知する仕組みに当たります。",
+   "cost": "基本のメトリクスは無料です。詳細なメトリクス、エージェントで集めた値（カスタムメトリクス）、ログの量、アラームの数などに応じて料金がかかります。",
+   "terms": [
+    [
+     "メトリクス",
+     "CPU 使用率など、時間とともに記録される数値"
+    ],
+    [
+     "アラーム",
+     "メトリクスがしきい値を超えたときに通知などを行う仕組み"
+    ],
+    [
+     "CloudWatch エージェント",
+     "メモリやログなど、標準では取れない情報を送るソフト"
+    ]
+   ]
+  },
+  {
+   "title": "リクエストの通り道を見る",
+   "add": [],
+   "flow": true,
+   "todo": "（まとめ）利用者が https://app.example.com を開いたとき",
+   "flowSteps": [
+    "ブラウザが名前を問い合わせ、Route 53 から ALB の宛先を受け取る（実際には途中のプロバイダーなどの DNS を経由します）",
+    "HTTPS のリクエストが、インターネットゲートウェイを通って ALB に届く",
+    "ALB が、正常に動いている EC2 のどれかに振り分ける",
+    "EC2 が RDS のデータを読み書きする",
+    "画像などのファイルは S3 から読む",
+    "EC2 が OS の更新などで外へ出るときは、NAT ゲートウェイを通る（外から EC2 へ直接は入れない）"
+   ],
+   "what": "",
+   "cmp": "オンプレでも、DNS → ロードバランサー → アプリサーバー → DB という流れは同じです。違うのは、それぞれの機器を買って置く代わりに、AWS のサービスを設定でつないでいる点です。",
+   "cost": "学習のために作ったときは、EC2 を止めるだけでは料金は止まりません。NAT ゲートウェイ・ALB・RDS・パブリック IPv4 アドレスなどを削除するところまでが手順です。",
+   "terms": [],
+   "costWarn": true
+  }
+ ],
+ "sheet": [
+  [
+   "IAM",
+   "誰が何をできるか",
+   "Active Directory のユーザーと権限",
+   "無料"
+  ],
+  [
+   "VPC・サブネット",
+   "自分専用のネットワーク",
+   "LAN・VLAN",
+   "無料（中に置くものに料金）"
+  ],
+  [
+   "インターネットゲートウェイ",
+   "VPC とインターネットの出入口",
+   "外部回線との境界",
+   "無料（データ転送は有料）"
+  ],
+  [
+   "EC2",
+   "仮想サーバー",
+   "VM",
+   "動かした時間（ディスクは容量）"
+  ],
+  [
+   "セキュリティグループ",
+   "サーバーごとのファイアウォール",
+   "iptables など",
+   "無料"
+  ],
+  [
+   "NAT ゲートウェイ",
+   "中から外への出口",
+   "NAT ルーター・プロキシ",
+   "時間＋通したデータ量"
+  ],
+  [
+   "RDS",
+   "運用を任せられる DB",
+   "DB サーバー（本番＋待機）",
+   "時間＋ストレージ容量"
+  ],
+  [
+   "S3",
+   "ファイル置き場",
+   "NAS",
+   "容量＋リクエスト＋転送量"
+  ],
+  [
+   "ALB",
+   "ロードバランサー",
+   "負荷分散装置",
+   "時間＋処理量（LCU）"
+  ],
+  [
+   "Auto Scaling",
+   "台数の自動調整",
+   "（なし）",
+   "無料（起動した EC2 などに料金）"
+  ],
+  [
+   "Route 53",
+   "DNS",
+   "DNS サーバー",
+   "ホストゾーン数＋問い合わせ数"
+  ],
+  [
+   "ACM",
+   "SSL/TLS 証明書",
+   "証明書の購入・更新",
+   "ALB などで使う公開証明書は無料"
+  ],
+  [
+   "CloudWatch",
+   "監視・ログ",
+   "Zabbix など",
+   "基本は無料、量に応じて有料"
+  ]
+ ],
+ "refs": [
+  [
+   "ルートユーザー（IAM）",
+   "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_root-user.html"
+  ],
+  [
+   "ルートユーザーの MFA",
+   "https://docs.aws.amazon.com/IAM/latest/UserGuide/enable-mfa-for-root.html"
+  ],
+  [
+   "責任共有モデル",
+   "https://aws.amazon.com/compliance/shared-responsibility-model/"
+  ],
+  [
+   "アベイラビリティゾーン",
+   "https://docs.aws.amazon.com/whitepapers/latest/aws-fault-isolation-boundaries/availability-zones.html"
+  ],
+  [
+   "リージョンの一覧",
+   "https://docs.aws.amazon.com/global-infrastructure/latest/regions/aws-regions.html"
+  ],
+  [
+   "IAM とは",
+   "https://docs.aws.amazon.com/IAM/latest/UserGuide/introduction.html"
+  ],
+  [
+   "IAM の識別子（グローバルなリソース）",
+   "https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html"
+  ],
+  [
+   "VPC とサブネットの基本",
+   "https://docs.aws.amazon.com/vpc/latest/userguide/vpc-subnet-basics.html"
+  ],
+  [
+   "サブネットのサイズ（予約されるアドレス）",
+   "https://docs.aws.amazon.com/vpc/latest/userguide/subnet-sizing.html"
+  ],
+  [
+   "インターネットゲートウェイ",
+   "https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Internet_Gateway.html"
+  ],
+  [
+   "EC2 インスタンスのライフサイクル",
+   "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-lifecycle.html"
+  ],
+  [
+   "ルートデバイスのストレージ",
+   "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/RootDeviceStorage.html"
+  ],
+  [
+   "汎用インスタンスタイプ",
+   "https://docs.aws.amazon.com/ec2/latest/instancetypes/gp.html"
+  ],
+  [
+   "セキュリティグループのルール",
+   "https://docs.aws.amazon.com/vpc/latest/userguide/security-group-rules.html"
+  ],
+  [
+   "デフォルトのセキュリティグループ",
+   "https://docs.aws.amazon.com/vpc/latest/userguide/default-security-group.html"
+  ],
+  [
+   "NAT ゲートウェイの基本",
+   "https://docs.aws.amazon.com/vpc/latest/userguide/nat-gateway-basics.html"
+  ],
+  [
+   "リージョン型の NAT ゲートウェイ",
+   "https://docs.aws.amazon.com/vpc/latest/userguide/nat-gateways-regional.html"
+  ],
+  [
+   "RDS と VPC（DB サブネットグループ）",
+   "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_VPC.WorkingWithRDSInstanceinaVPC.html"
+  ],
+  [
+   "マルチ AZ の DB インスタンス",
+   "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.MultiAZSingleStandby.html"
+  ],
+  [
+   "S3 の既定の設定の変更（2023年4月）",
+   "https://aws.amazon.com/about-aws/whats-new/2023/04/amazon-s3-two-security-best-practices-buckets-default/"
+  ],
+  [
+   "S3 バケットの名前空間",
+   "https://docs.aws.amazon.com/AmazonS3/latest/userguide/gpbucketnamespaces.html"
+  ],
+  [
+   "S3 用の VPC エンドポイント",
+   "https://docs.aws.amazon.com/vpc/latest/privatelink/vpc-endpoints-s3.html"
+  ],
+  [
+   "Application Load Balancer",
+   "https://docs.aws.amazon.com/elasticloadbalancing/latest/application/application-load-balancers.html"
+  ],
+  [
+   "ターゲットグループのヘルスチェック",
+   "https://docs.aws.amazon.com/elasticloadbalancing/latest/application/target-group-health-checks.html"
+  ],
+  [
+   "Elastic Load Balancing の料金",
+   "https://aws.amazon.com/elasticloadbalancing/pricing/"
+  ],
+  [
+   "Auto Scaling のヘルスチェック",
+   "https://docs.aws.amazon.com/autoscaling/ec2/userguide/health-checks-overview.html"
+  ],
+  [
+   "Route 53 の料金",
+   "https://aws.amazon.com/route53/pricing/"
+  ],
+  [
+   "ACM のマネージド更新",
+   "https://docs.aws.amazon.com/acm/latest/userguide/managed-renewal.html"
+  ],
+  [
+   "ACM の料金",
+   "https://aws.amazon.com/certificate-manager/pricing/"
+  ],
+  [
+   "EC2 の詳細モニタリング",
+   "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/manage-detailed-monitoring.html"
+  ],
+  [
+   "CloudWatch エージェント",
+   "https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Install-CloudWatch-Agent.html"
+  ],
+  [
+   "パブリック IPv4 アドレスの料金（2024年2月から）",
+   "https://aws.amazon.com/blogs/aws/new-aws-public-ipv4-address-charge-public-ip-insights/"
+  ],
+  [
+   "AWS Budgets",
+   "https://docs.aws.amazon.com/cost-management/latest/userguide/budgets-managing-costs.html"
+  ]
+ ]
+}
+</script>
+<script>
+(function () {
+  "use strict";
+  var data = JSON.parse(document.getElementById("scenario").textContent);
+  var E = data.elements, steps = data.steps;
+  var RANK = { "s-aws": 0, "s-region": 1, "s-vpc": 2, "s-az": 3, "s-pub": 4, "s-priv": 4, "s-asg": 5, "actor": 6, "svc": 6, "rline": 7, "badge": 8, "note": 9 };
+  var ids = Object.keys(E).sort(function (a, b) { return RANK[E[a].kind] - RANK[E[b].kind]; });
+  var idx = 0;
+
+  function esc(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+  function visibleAt(i) {
+    var v = {};
+    for (var k = 0; k <= i; k++) steps[k].add.forEach(function (id) { v[id] = true; });
+    return v;
+  }
+  // 図形と文字を別々に返す（矢印を図形と文字のあいだに描くため）
+  function el(id, isNew) {
+    var e = E[id], cls = "el " + e.kind + (e.cat ? " svc cat-" + e.cat : "") + (isNew ? " new" : "");
+    var open = '<g class="' + cls + '" data-id="' + id + '">';
+    var r = el1(e, isNew);
+    return { shape: open + r[0] + "</g>", text: open + r[1] + "</g>" };
+  }
+  function el1(e, isNew) {
+    var s = "", t = "";
+    if (e.kind === "note") return ["", '<text x="' + e.x + '" y="' + e.y + '">' + esc(e.label) + "</text>"];
+    if (e.kind === "rline") {
+      return ['<line x1="' + e.x1 + '" y1="' + e.y1 + '" x2="' + e.x2 + '" y2="' + e.y2 + '"/>',
+        '<text x="' + (e.x1 + e.x2) / 2 + '" y="' + (e.y1 - 8) + '">' + esc(e.label) + "</text>"];
+    }
+    var rx = e.kind === "svc" || e.kind === "badge" || e.kind === "actor" ? 8 : 10;
+    if (isNew) s += '<rect class="halo" x="' + e.x + '" y="' + e.y + '" width="' + e.w + '" height="' + e.h + '" rx="' + rx + '"/>';
+    s += '<rect x="' + e.x + '" y="' + e.y + '" width="' + e.w + '" height="' + e.h + '" rx="' + rx + '"/>';
+    if (e.kind === "svc" || e.kind === "actor") {
+      var cxp = e.x + e.w / 2;
+      if (e.sub) {
+        t += '<text class="t" x="' + cxp + '" y="' + (e.y + e.h / 2 - 3) + '">' + esc(e.label) + "</text>";
+        t += '<text class="sub" x="' + cxp + '" y="' + (e.y + e.h / 2 + 13) + '">' + esc(e.sub) + "</text>";
+      } else {
+        t += '<text class="t" x="' + cxp + '" y="' + (e.y + e.h / 2 + 5) + '">' + esc(e.label) + "</text>";
+      }
+    } else if (e.kind === "badge") {
+      t += '<text class="t" x="' + (e.x + e.w / 2) + '" y="' + (e.y + e.h / 2 + 4) + '">' + esc(e.label) + "</text>";
+    } else {
+      t += '<text class="t" x="' + (e.x + 12) + '" y="' + (e.y + 19) + '">' + esc(e.label) +
+        (e.cidr ? '<tspan class="cidr" dx="8">' + esc(e.cidr) + "</tspan>" : "") + "</text>";
+    }
+    return [s, t];
+  }
+  function diagram(i) {
+    var now = visibleAt(i), prev = i > 0 ? visibleAt(i - 1) : {};
+    var s = '<svg viewBox="0 0 1000 720" role="img" aria-label="構成図：' +
+      esc(ids.filter(function (id) { return now[id] && E[id].kind !== "note"; }).map(function (id) { return E[id].label; }).join("、")) + '">' +
+      '<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">' +
+      '<path d="M0 0 L10 5 L0 10 z" fill="var(--hl)"/></marker></defs>';
+    var shapes = "", texts = "", paths = "", nums = "";
+    ids.forEach(function (id) {
+      if (!now[id]) return;
+      var r = el(id, !prev[id]); shapes += r.shape; texts += r.text;
+    });
+    if (steps[i].flow) {
+      data.flows.forEach(function (f) {
+        paths += '<g class="flow"><path d="' + f.d + '" marker-end="url(#arrow)"/></g>';
+        nums += '<g class="flow"><circle cx="' + f.at[0] + '" cy="' + f.at[1] + '" r="11"/><text x="' + f.at[0] + '" y="' + f.at[1] + '">' + f.n + "</text></g>";
+      });
+    }
+    return s + shapes + paths + texts + nums + "</svg>";
+  }
+  function render() {
+    var st = steps[idx];
+    document.getElementById("count").textContent = (idx + 1) + " / " + steps.length;
+    Array.prototype.forEach.call(document.querySelectorAll(".dot"), function (d, i) {
+      if (i === idx) d.setAttribute("aria-current", "step"); else d.removeAttribute("aria-current");
+    });
+    document.getElementById("stitle").textContent = st.title;
+    document.getElementById("todo").innerHTML = "<b>やること</b>" + esc(st.todo);
+    document.getElementById("dwrap").innerHTML = diagram(idx);
+    var w = "";
+    if (st.flowSteps) {
+      w = '<ol class="flowlist">' + st.flowSteps.map(function (t, k) {
+        return '<li><span class="num">' + (k + 1) + "</span><span>" + esc(t) + "</span></li>";
+      }).join("") + "</ol>";
+    }
+    if (st.what) w += '<p class="what">' + esc(st.what) + "</p>";
+    document.getElementById("what").innerHTML = w;
+    document.getElementById("cmp").innerHTML = "<b>オンプレだと</b>" + esc(st.cmp);
+    document.getElementById("cost").innerHTML = st.cost ?
+      '<div class="cost' + (st.costWarn ? " warn" : "") + '"><b>' + (st.costWarn ? "料金（注意）" : "料金") + "</b>" + esc(st.cost) + "</div>" : "";
+    document.getElementById("terms").innerHTML = st.terms.length ?
+      "<h4>このステップの用語</h4><table><tbody>" + st.terms.map(function (t) {
+        return "<tr><td>" + esc(t[0]) + "</td><td>" + esc(t[1]) + "</td></tr>";
+      }).join("") + "</tbody></table>" : "";
+    document.getElementById("prev").disabled = idx === 0;
+    var nx = document.getElementById("next");
+    nx.disabled = idx === steps.length - 1;
+    nx.textContent = idx === steps.length - 1 ? "おわり" : "次へ ▶";
+    try { history.replaceState(null, "", "#step-" + (idx + 1)); } catch (e) {}
+  }
+  function go(i) { idx = Math.max(0, Math.min(steps.length - 1, i)); render(); }
+
+  var dots = document.getElementById("dots");
+  steps.forEach(function (st, i) {
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "dot"; b.textContent = i + 1;
+    b.setAttribute("aria-label", "ステップ " + (i + 1) + "：" + st.title);
+    b.addEventListener("click", function () { go(i); });
+    dots.appendChild(b);
+  });
+  document.getElementById("prev").addEventListener("click", function () { go(idx - 1); });
+  document.getElementById("next").addEventListener("click", function () { go(idx + 1); });
+  document.addEventListener("keydown", function (e) {
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
+    if (e.key === "ArrowRight") go(idx + 1);
+    else if (e.key === "ArrowLeft") go(idx - 1);
+  });
+  document.getElementById("sheet").innerHTML = data.sheet.map(function (r) {
+    return "<tr><td><b>" + esc(r[0]) + "</b></td><td>" + esc(r[1]) + "</td><td>" + esc(r[2]) + "</td><td>" + esc(r[3]) + "</td></tr>";
+  }).join("");
+  var refs = document.getElementById("refs");
+  refs.innerHTML = data.refs.length ? data.refs.map(function (r) {
+    return '<li><a href="' + esc(r[1]) + '">' + esc(r[0]) + "</a></li>";
+  }).join("") : "<li>（確認中）</li>";
+  var m = /^#step-(\d+)$/.exec(location.hash || "");
+  if (m) idx = Math.max(0, Math.min(steps.length - 1, parseInt(m[1], 10) - 1));
+  render();
+})();
+</script>
+</body>
+</html>

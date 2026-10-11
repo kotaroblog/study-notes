@@ -14,6 +14,7 @@
 | `git/verify/verify_scenario.py` | 図の各ステップを実際の Git で再現して突き合わせるスクリプト |
 | `typescript/index.html` | TypeScript 隙間ドリル（`typescript/src/` から生成。直接編集しない） |
 | `typescript/src/` | ドリルの中身（`content.mjs`）・検証（`verify.mjs`）・生成（`build.mjs`） |
+| `aws/index.html` | 見えるAWS（場面1：Web アプリを1つ AWS に載せる）。説明は AWS 公式ドキュメントで裏取りし、出典をページ末尾に載せる |
 
 ## 見えるGit の確かめ方
 
