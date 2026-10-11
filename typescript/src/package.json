@@ -1,0 +1,13 @@
+{
+  "name": "ts-drill",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "verify": "node verify.mjs",
+    "build": "node verify.mjs && node build.mjs"
+  },
+  "devDependencies": {
+    "ts5": "npm:typescript@^5.9.3",
+    "typescript": "^7.0.2"
+  }
+}

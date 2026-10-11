@@ -1,0 +1,670 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="JavaScript と Swift の知識から TypeScript を学ぶ隙間時間ドリル。全14単元・77問、全コードを tsc で検証済み。">
+<title>TypeScript 隙間ドリル</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=JetBrains+Mono:wght@400;600&family=Zen+Kaku+Gothic+New:wght@700&display=swap">
+<style>
+/* Layout: 1カラム（最大 680px）。上部に固定の帳票バー、本文はカード化しすぎず、コードと診断だけを面で区切る */
+:root {
+  --bg: #f4f5f8;
+  --surface: #ffffff;
+  --ink: #1b2130;
+  --muted: #5a6475;
+  --line: #dce0e8;
+  --accent: #3f4cc4;
+  --accent-ink: #ffffff;
+  --accent-soft: #e7e9fb;
+  --ok: #17784f;
+  --ok-soft: #e1f3ea;
+  --err: #b93328;
+  --err-soft: #fbe6e3;
+  --code-bg: #eef0f5;
+  --code-ink: #1f2533;
+  --gutter: #9aa2b1;
+  --tok-keyword: #6a2fb8;
+  --tok-string: #1d7a43;
+  --tok-number: #b3530f;
+  --tok-comment: #7b8494;
+  --tok-type: #2557b0;
+  --tok-func: #8a3a00;
+  --font-display: "Zen Kaku Gothic New", "Hiragino Sans", "Noto Sans JP", sans-serif;
+  --font-body: "BIZ UDPGothic", "Hiragino Sans", "Noto Sans JP", sans-serif;
+  --font-code: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, "Hiragino Sans", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12151b; --surface: #1a1e26; --ink: #e5e8ee; --muted: #9ba4b3; --line: #2b313c;
+    --accent: #8f9bff; --accent-ink: #12151b; --accent-soft: #252a45;
+    --ok: #4cc38a; --ok-soft: #173326; --err: #ff8073; --err-soft: #3a1d1b;
+    --code-bg: #0f1217; --code-ink: #dfe3ea; --gutter: #5d6574;
+    --tok-keyword: #c79bff; --tok-string: #8fd6a4; --tok-number: #f3a96b; --tok-comment: #7d8697; --tok-type: #84b4ff; --tok-func: #f0c27a;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12151b; --surface: #1a1e26; --ink: #e5e8ee; --muted: #9ba4b3; --line: #2b313c;
+  --accent: #8f9bff; --accent-ink: #12151b; --accent-soft: #252a45;
+  --ok: #4cc38a; --ok-soft: #173326; --err: #ff8073; --err-soft: #3a1d1b;
+  --code-bg: #0f1217; --code-ink: #dfe3ea; --gutter: #5d6574;
+  --tok-keyword: #c79bff; --tok-string: #8fd6a4; --tok-number: #f3a96b; --tok-comment: #7d8697; --tok-type: #84b4ff; --tok-func: #f0c27a;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.75;
+}
+a { color: var(--accent); }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+code { font-family: var(--font-code); font-size: 0.88em; background: var(--code-bg); padding: 0.08em 0.35em; border-radius: 4px; overflow-wrap: anywhere; }
+
+.bar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+}
+.bar-inner {
+  max-width: 680px; margin: 0 auto; padding: 10px 16px;
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.brand {
+  font-family: var(--font-display); font-weight: 700; font-size: 17px; letter-spacing: 0.02em;
+  background: none; border: 0; padding: 0; cursor: pointer; display: flex; align-items: baseline; gap: 8px;
+}
+.brand .ts { font-family: var(--font-code); font-size: 12px; font-weight: 600; color: var(--accent-ink); background: var(--accent); padding: 1px 6px; border-radius: 4px; letter-spacing: 0; }
+.nav { margin-left: auto; display: flex; gap: 4px; }
+.nav button {
+  border: 0; background: none; padding: 6px 10px; border-radius: 8px; cursor: pointer; color: var(--muted); font-size: 14px; min-height: 36px;
+}
+.nav button[aria-current="page"] { color: var(--ink); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); }
+
+main { max-width: 680px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 56px; }
+h1, h2, h3 { font-family: var(--font-display); font-weight: 700; text-wrap: balance; line-height: 1.4; margin: 0; }
+h1 { font-size: 26px; }
+h2 { font-size: 19px; }
+h3 { font-size: 16px; }
+.eyebrow { font-size: 12px; letter-spacing: 0.08em; color: var(--muted); font-family: var(--font-code); }
+.muted { color: var(--muted); }
+.stack { display: flex; flex-direction: column; gap: 14px; }
+.stack-lg { display: flex; flex-direction: column; gap: 28px; }
+
+/* 進捗のまとめ */
+.summary {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.score { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.score b { font-family: var(--font-code); font-size: 34px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1; }
+.meter { height: 8px; border-radius: 99px; background: var(--line); overflow: hidden; display: flex; }
+.meter i { display: block; height: 100%; }
+.meter .m-ok { background: var(--ok); }
+.meter .m-err { background: var(--err); }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  min-height: 46px; padding: 10px 16px; border-radius: 10px; cursor: pointer;
+  border: 1px solid var(--line); background: var(--surface); font-weight: 700; font-size: 15px; text-align: center;
+}
+.btn-primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn:disabled { opacity: 0.5; cursor: default; }
+.btn-wide { width: 100%; }
+.link { background: none; border: 0; padding: 0; color: var(--accent); cursor: pointer; font-size: 14px; min-height: 32px; }
+
+/* 単元の一覧 */
+.units { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.units li { border-bottom: 1px solid var(--line); }
+.unit-row {
+  width: 100%; text-align: left; background: none; border: 0; cursor: pointer;
+  display: grid; grid-template-columns: 34px 1fr auto; gap: 4px 12px; align-items: center; padding: 14px 2px;
+}
+.unit-row .no { font-family: var(--font-code); font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.unit-row .t { font-weight: 700; min-width: 0; }
+.unit-row .meta { font-size: 13px; color: var(--muted); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.unit-row .cells { grid-column: 2 / 4; display: flex; gap: 3px; }
+.cell { width: 14px; height: 6px; border-radius: 2px; background: var(--line); }
+.cell.ok { background: var(--ok); }
+.cell.err { background: var(--err); }
+.chip { font-size: 12px; padding: 1px 8px; border-radius: 99px; font-weight: 700; }
+.chip.done { background: var(--ok-soft); color: var(--ok); }
+
+/* 単元の本文 */
+.lead { font-size: 17px; }
+.points { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 8px; }
+.points li::marker { color: var(--accent); }
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--line); min-width: 9em; }
+tr:last-child td { border-bottom: 0; }
+th { font-size: 12px; color: var(--muted); font-weight: 700; letter-spacing: 0.06em; background: var(--bg); }
+
+/* コード */
+.code { border-radius: 12px; background: var(--code-bg); overflow: hidden; }
+.code-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 12px 0; font-size: 12px; color: var(--muted); font-family: var(--font-code); }
+.code-head a { font-family: var(--font-body); font-size: 12px; text-decoration: none; padding: 4px 0; }
+.code-body { display: grid; grid-template-columns: auto 1fr; }
+.gutter {
+  margin: 0; padding: 10px 8px 12px 12px; text-align: right; color: var(--gutter);
+  font-family: var(--font-code); font-size: 13px; line-height: 1.6; user-select: none;
+}
+.gutter span { display: block; }
+.gutter .hit { color: var(--err); font-weight: 600; }
+.code pre {
+  margin: 0; padding: 10px 14px 12px 6px; overflow-x: auto; min-width: 0;
+  font-family: var(--font-code); font-size: 13px; line-height: 1.6; color: var(--code-ink); tab-size: 2;
+}
+.code pre code { background: none; padding: 0; font-size: inherit; overflow-wrap: normal; }
+.token.keyword, .token.boolean { color: var(--tok-keyword); }
+.token.string, .token.template-string { color: var(--tok-string); }
+.token.number { color: var(--tok-number); }
+.token.comment { color: var(--tok-comment); font-style: italic; }
+.token.class-name, .token.builtin { color: var(--tok-type); }
+.token.function { color: var(--tok-func); }
+.token.punctuation, .token.operator { color: var(--muted); }
+
+/* 問題 */
+.qhead { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.dots { display: flex; gap: 5px; }
+.dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--line); display: block; }
+.dots i.now { background: var(--accent); }
+.dots i.ok { background: var(--ok); }
+.dots i.err { background: var(--err); }
+.qtext { font-size: 18px; font-weight: 700; line-height: 1.6; }
+.choices { display: grid; gap: 8px; }
+.choices.two { grid-template-columns: 1fr 1fr; }
+.choice {
+  min-height: 52px; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface);
+  text-align: left; cursor: pointer; display: flex; align-items: center; gap: 10px; line-height: 1.5; min-width: 0;
+}
+.choices.two .choice { justify-content: center; text-align: center; font-weight: 700; }
+.choice .mono { font-family: var(--font-code); font-size: 14px; overflow-wrap: anywhere; }
+.choice[disabled] { cursor: default; }
+.choice.is-answer { border-color: var(--ok); background: var(--ok-soft); }
+.choice.is-wrong { border-color: var(--err); background: var(--err-soft); }
+.choice .mark { margin-left: auto; font-weight: 700; flex: none; }
+.choice.is-answer .mark { color: var(--ok); }
+.choice.is-wrong .mark { color: var(--err); }
+
+.feedback { border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 10px; background: var(--surface); border: 1px solid var(--line); }
+.verdict { font-family: var(--font-display); font-size: 18px; font-weight: 700; }
+.verdict.ok { color: var(--ok); }
+.verdict.err { color: var(--err); }
+.evidence { border-radius: 10px; background: var(--code-bg); padding: 10px 12px; font-family: var(--font-code); font-size: 12.5px; line-height: 1.6; overflow-x: auto; }
+.evidence .label { font-family: var(--font-body); font-size: 12px; color: var(--muted); display: block; margin-bottom: 4px; }
+.diag { display: flex; gap: 8px; align-items: baseline; white-space: pre-wrap; overflow-wrap: anywhere; }
+.diag + .diag { margin-top: 6px; }
+.tscode { flex: none; color: var(--err); font-weight: 600; }
+.clean { color: var(--ok); font-weight: 600; }
+.out-line { white-space: pre; }
+
+.result-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.result-list li { display: flex; gap: 10px; padding: 10px 2px; border-bottom: 1px solid var(--line); align-items: baseline; }
+.result-list .r { font-weight: 700; flex: none; width: 1.2em; }
+.result-list .r.ok { color: var(--ok); }
+.result-list .r.err { color: var(--err); }
+
+footer { max-width: 680px; margin: 0 auto; padding-inline: 16px; padding-block: 8px 40px; font-size: 13px; color: var(--muted); display: flex; flex-direction: column; gap: 8px; }
+.sync::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--gutter); margin-right: 6px; vertical-align: 1px; }
+.sync[data-state="cloud"]::before { background: var(--ok); }
+.sync[data-state="saving"]::before { background: var(--accent); }
+.sync[data-state="error"]::before { background: var(--err); }
+.reset-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+@media (max-width: 380px) {
+  .choices.two { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { scroll-behavior: auto !important; }
+}
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="bar-inner">
+    <button class="brand" data-action="home" type="button"><span class="ts">TS</span>隙間ドリル</button>
+    <nav class="nav" aria-label="表示の切り替え">
+      <button type="button" data-action="home" id="nav-home">単元</button>
+      <button type="button" data-action="cheatsheet" id="nav-cheat">Swift 対応表</button>
+    </nav>
+  </div>
+</header>
+
+<main id="app" aria-live="polite"></main>
+
+<footer>
+  <div class="sync" id="sync" data-state="local">進捗はこの端末のブラウザに保存しています</div>
+  <div id="verified"></div>
+  <div class="reset-row" id="reset-row"></div>
+  <a href="../">← 見える学習ノートの一覧へ</a>
+</footer>
+
+<script id="drill-data" type="application/json">{"meta":{"versions":{"ts7":"7.0.2","ts5":"5.9.3"},"checkedAt":"2026-10-11"},"units":[{"id":"u1","title":"TypeScript とは","min":5,"lead":"TypeScript は JavaScript に「型」を足した言語。書いた `.ts` は、型を取り除いた JavaScript に変換されて動く。型チェックは変換とは別に、`tsc` やエディタが行う。","points":["型をチェックするのは `tsc`（TypeScript のコンパイラ）やエディタ。実際に動くのは JavaScript。","型は実行時には残らない（型消去）。実行中に「この値は User 型か」を TypeScript の型で調べることはできない。","JavaScript の文法は基本的にそのまま使える。TypeScript はそこに型の書き方を足したもの。JS の知識はそのまま活きる。","`tsc` は既定では、型エラーがあっても JavaScript を出力する（`noEmitOnError` が既定で false のため）。現場のプロジェクトで、型エラーをどこで止めているか（ビルド・CI など）を確認しておくとよい。"],"swift":[["型エラーがあると実行ファイルが作られない","型チェックと JS への変換は別の工程"],["実行時も型の情報を持つ（`is` / `as?` で調べられる）","型は実行時に消える。調べるのは `typeof` などの JS の機能"]],"examples":[{"title":"型が合わないとエラー","code":"let count: number = 1;\ncount = \"2\"; // エラー: string は number に入らない","multiFile":false}],"questions":[{"id":"u1-1","kind":"pick","q":"TypeScript の型について正しいものは？","code":null,"explain":"型はチェックのためのもので、出力される JavaScript からは消える。型を書かなくても推論されるし、型エラーがあっても `tsc` は既定で JS を出力する。","multiFile":false,"choices":["実行前のチェックに使われ、実行される JavaScript には残らない","実行時にも残っていて、User などの型名を取り出せる","型を書かないと実行できない","型が合わないと、必ず JavaScript が出力されない"],"answer":0,"evidence":null},{"id":"u1-2","kind":"tf","q":"この TypeScript は型チェックを通る？","code":"let price = 100;\nprice = \"120円\";","explain":"`price` は初期値の 100 から `number` と推論される。あとから文字列は入れられない。JavaScript なら何も言われずに動いてしまう書き方。","multiFile":false,"choices":["通る","エラーになる"],"answer":1,"evidence":{"type":"tsc","diag":[{"file":"main.ts","line":2,"code":2322,"message":"Type 'string' is not assignable to type 'number'."}]}},{"id":"u1-3","kind":"tf","q":"この TypeScript は型チェックを通る？","code":"function add(a: number, b: number) {\n  return a + b;\n}\nadd(1, \"2\");","explain":"引数 `b` は `number`。`\"2\"` は string なのでエラー。JavaScript だと `1 + \"2\"` は文字列 `\"12\"` になり、気づきにくいバグになる。","multiFile":false,"choices":["通る","エラーになる"],"answer":1,"evidence":{"type":"tsc","diag":[{"file":"main.ts","line":4,"code":2345,"message":"Argument of type 'string' is not assignable to parameter of type 'number'."}]}},{"id":"u1-4","kind":"tf","q":"この TypeScript は型チェックを通る？","code":"const total: number = 1 + 2;\nconsole.log(total);","explain":"`1 + 2` は number なので、`number` と書いた変数に入る。","multiFile":false,"choices":["通る","エラーになる"],"answer":0,"evidence":{"type":"tsc","diag":[]}},{"id":"u1-5","kind":"pick","q":"`.ts` ファイルを Node.js やブラウザで動かすとき、実際に実行されるのは？","code":null,"explain":"最近の Node.js は `.ts` を直接実行できるが、これも型の部分を取り除いて JavaScript として動かしているだけで、型チェックはしない。チェックは `tsc` やエディタの役目。","multiFile":false,"choices":["型を取り除いた JavaScript","型の情報ごと実行される TypeScript","型チェックに通った部分だけ"],"answer":0,"evidence":null}]},{"id":"u2","title":"現場で読む JavaScript","min":8,"lead":"TypeScript のコードの大半は JavaScript の書き方。ここで詰まると型の話まで進めないので、現場のコードによく出る書き方をおさらいする。","points":["変数は `const`（再代入しない）と `let`（再代入する）。`var` は古い書き方。","比較は `===` を使う。`==` は型を変換してから比べるので `\"1\" == 1` が true になる。","アロー関数 `(a, b) => a + b`。本体が式1つなら `return` を省ける。","分割代入 `const { name, age } = user` / `const [first, second] = list`。","スプレッド `...` は配列やオブジェクトを展開する。`{ ...user, age: 31 }` は元の `user` を変えずに、一部を差し替えた新しいオブジェクトを作る。","配列のメソッド: `map`（変換）、`filter`（絞り込み）、`find`（最初の1件。なければ undefined）、`some`（1つでも当てはまるか）、`reduce`（集計）。","`?.` は途中が null / undefined なら undefined を返す。`??` は左が null / undefined のときだけ右を使う。`||` は左が `0` や `\"\"` でも右を使う。"],"swift":[["`let`（定数）","`const`"],["`var`（変数）","`let`　※名前が逆になっているので注意"],["`let` の struct は中身も変えられない","`const` でもオブジェクトの中身は変えられる（再代入だけ禁止）"],["`reduce(0) { $0 + $1 }`","`reduce((sum, n) => sum + n, 0)`（初期値が後ろ）"]],"examples":[{"title":"よく出る書き方","code":"const user = { name: \"Ken\", age: 30 };\nconst { name } = user;              // name は \"Ken\"\nconst older = { ...user, age: 31 }; // user は変わらない\n\nconst nums = [1, 2, 3, 4];\nconst evens = nums.filter((n) => n % 2 === 0);     // [2, 4]\nconst total = nums.reduce((sum, n) => sum + n, 0); // 10\nconst message = `${name} さんは ${older.age} 歳`;  // テンプレート文字列","multiFile":false}],"questions":[{"id":"u2-1","kind":"out","q":"表示されるのは？","code":"const options: { name: string; age?: number } = { name: \"Ken\" };\nconst { name, age = 20 } = options;\nconsole.log(age);","explain":"分割代入の `= 20` は、値が undefined のときに使われる既定値。`age` が無いので 20。","multiFile":false,"choices":["20","undefined","Ken","null"],"answer":0,"evidence":{"type":"run","stdout":"20"}},{"id":"u2-2","kind":"out","q":"表示されるのは？","code":"const a = [1, 2, 3];\nconst b = [...a, 4];\nb.push(5);\nconsole.log(a.length, b.length);","explain":"`[...a, 4]` は新しい配列を作る。`b` に push しても `a` は変わらない。","multiFile":false,"choices":["3 5","5 5","4 5","3 4"],"answer":0,"evidence":{"type":"run","stdout":"3 5"}},{"id":"u2-3","kind":"out","q":"表示されるのは？","code":"const nums = [1, 2, 3, 4, 5];\nconst result = nums.filter((n) => n % 2 === 1).map((n) => n * 10);\nconsole.log(JSON.stringify(result));","explain":"`filter` で奇数 1, 3, 5 を残し、`map` で 10 倍する。","multiFile":false,"choices":["[10,30,50]","[20,40]","[10,20,30,40,50]","[1,3,5]"],"answer":0,"evidence":{"type":"run","stdout":"[10,30,50]"}},{"id":"u2-4","kind":"out","q":"`show(0)` で表示されるのは？","code":"function show(count: number) {\n  console.log(count || 10, count ?? 10);\n}\nshow(0);","explain":"`||` は左が falsy（0, \"\", false, null, undefined など）なら右を使うので 10。`??` は左が null / undefined のときだけ右を使うので 0 のまま。数値や文字列の既定値には `??` が安全。","multiFile":false,"choices":["10 0","0 0","10 10","0 10"],"answer":0,"evidence":{"type":"run","stdout":"10 0"}},{"id":"u2-5","kind":"out","q":"表示されるのは？","code":"const user = { name: \"Ken\", age: 30 };\nconst updated = { ...user, age: 31 };\nconsole.log(user.age, updated.age);","explain":"スプレッドで作ったのは別のオブジェクト。元の `user` は 30 のまま。React などで状態を更新するときによく使う書き方。","multiFile":false,"choices":["30 31","31 31","30 30","31 30"],"answer":0,"evidence":{"type":"run","stdout":"30 31"}},{"id":"u2-6","kind":"pick","q":"関数の中で定数を宣言するとき（Swift の `let total = 1`）、TypeScript で使うキーワードは？","code":null,"explain":"変数の宣言では、Swift の `let` は TS の `const`、Swift の `var` は TS の `let`。同じ `let` で意味が違うので取り違えやすい。`readonly` はプロパティに付けるもので、変数の宣言には使えない（struct のプロパティの `let` に当たるのが `readonly`。単元4）。","multiFile":false,"choices":["const","let","var","readonly"],"answer":0,"evidence":null}]},{"id":"u3","title":"基本の型と型推論","min":7,"lead":"型は全部に書く必要はない。初期値から推論されるので、書くのは推論できない所と、意図をはっきりさせたい所。","points":["基本の型は `string` `number` `boolean`。`number` は整数と小数を区別しない。","配列は `string[]`（`Array\u003cstring>` とも書ける）。長さと並びが決まっているものはタプル `[string, number]`。","`let count = 0` と書けば `count` は `number` と推論される。","`const` で文字列や数値を宣言すると、型はその値そのもの（リテラル型）になる。`const mode = \"dark\"` の型は `\"dark\"`。`let` なら `string`。","`any` は何でも入り、型チェックが効かなくなる。strict 設定では、引数の型を書かずに暗黙の any になるとエラーになる。"],"swift":[["`Int` / `Double`","`number`（区別なし）"],["`String` / `Bool`","`string` / `boolean`"],["`[String]`","`string[]`"],["`(String, Int)`","`[string, number]`（タプル）"]],"examples":[{"title":"推論に任せる","code":"let count = 0;          // number\nconst mode = \"dark\";    // \"dark\"（リテラル型）\nlet theme = \"dark\";     // string\nconst tags = [\"a\", \"b\"]; // string[]\n\nfunction double(n: number) { // 引数は書く。戻り値は number と推論される\n  return n * 2;\n}","multiFile":false}],"questions":[{"id":"u3-1","kind":"type","q":"`count` の型は？","code":"let count = 10;","explain":"`let` は再代入できるので、値 10 そのものではなく `number` になる。`int` という型は TypeScript にない。","multiFile":false,"choices":["number","10","any","int"],"answer":0,"evidence":{"type":"types"}},{"id":"u3-2","kind":"type","q":"`label` の型は？","code":"const label = \"OK\";","explain":"`const` は再代入できないので、値そのものの型 `\"OK\"` になる。`String`（大文字）はラッパーオブジェクトの型で、普段は使わない。","multiFile":false,"choices":["\"OK\"","string","any","String"],"answer":0,"evidence":{"type":"types"}},{"id":"u3-3","kind":"type","q":"`items` の型は？","code":"const items = [1, \"two\", 3];","explain":"配列リテラルはタプルではなく配列として推論される。中身の型をまとめた `(string | number)[]` になる。","multiFile":false,"choices":["(string | number)[]","[number, string, number]","any[]","number[]"],"answer":0,"evidence":{"type":"types"}},{"id":"u3-4","kind":"tf","q":"この TypeScript は型チェックを通る？","code":"let rate: number = 0.5;\nrate = 3;","explain":"`number` は整数も小数も同じ型。Swift のように Int と Double を変換する必要はない。","multiFile":false,"choices":["通る","エラーになる"],"answer":0,"evidence":{"type":"tsc","diag":[]}},{"id":"u3-5","kind":"tf","q":"この TypeScript は型チェックを通る？","code":"function double(n) {\n  return n * 2;\n}","explain":"引数 `n` に型がないので暗黙の any になる。strict 設定（`noImplicitAny`）ではエラー。`n: number` と書く。","multiFile":false,"choices":["通る","エラーになる"],"answer":1,"evidence":{"type":"tsc","diag":[{"file":"main.ts","line":1,"code":7006,"message":"Parameter 'n' implicitly has an 'any' type."}]}},{"id":"u3-6","kind":"tf","q":"この TypeScript は型チェックを通る？","code":"const pair: [string, number] = [\"age\", 30, true];","explain":"タプル `[string, number]` は要素が2つと決まっているので、3つ書くとエラー。ただし、あとから `pair.push(3)` で足すことは止められない（`readonly [string, number]` にすれば止まる）。","multiFile":false,"choices":["通る","エラーになる"],"answer":1,"evidence":{"type":"tsc","diag":[{"file":"main.ts","line":1,"code":2322,"message":"Type '[string, number, boolean]' is not assignable to type '[string, number]'.\nSource has 3 element(s) but target allows only 2."}]}}]},{"id":"u4","title":"オブジェクトの型","min":8,"lead":"オブジェクトの形に名前を付けるのが `type` と `interface`。現場のコードで一番よく見る型の書き方。","points":["`type User = { id: number; name: string }` または `interface User { id: number; name: string }`。","`?` を付けたプロパティは省略できる。読むと「その型 か undefined」として扱われる。","`readonly` を付けると再代入がエラーになる（型チェックの上だけの制限）。","オブジェクトの形を表すだけなら `type` と `interface` はほぼ同じように使える。拡張は interface なら `extends`、type なら `&`。違いは、interface は同じ名前で2回書くと宣言が合体すること、type は `string | number` のような union にも名前を付けられること。どちらを使うかは現場の既存コードに合わせる。","オブジェクトリテラルを型付きの変数に直接書くと、型にないプロパティはエラーになる（余分なプロパティのチェック）。"],"swift":[["`struct User { let id: Int; var email: String? }`","`type User = { readonly id: number; email?: string }`"],["`protocol`","`interface`（ただし準拠の宣言は不要。単元9で）"]],"examples":[{"title":"type と interface","code":"type User = {\n  id: number;\n  name: string;\n  email?: string;            // 省略できる\n  readonly createdAt: string; // 再代入できない\n};\n\ninterface Admin extends User { // interface は extends で拡張できる\n  role: \"admin\";\n}\n\nconst admin: Admin = { id: 1, name: \"Ken\", createdAt: \"2026-10-11\", role: \"admin\" };","multiFile":false}],"questions":[{"id":"u4-1","kind":"tf","q":"この TypeScript は型チェックを通る？","code":"type User = { id: number; name: string };\nconst u: User = { id: 1 };","explain":"`name` は必須なのに無い。省略したいなら `name?: string` にする。","multiFile":false,"choices":["通る","エラーになる"],"answer":1,"evidence":{"type":"tsc","diag":[{"file":"main.ts","line":2,"code":2741,"message":"Property 'name' is missing in type '{ id: number; }' but required in type 'User'."}]}},{"id":"u4-2","kind":"tf","q":"この TypeScript は型チェックを通る？","code":"type User = { id: number; name: string; email?: string };\nconst u: User = { id: 1, name: \"Ken\" };","explain":"`email?` は省略できる。","multiFile":false,"choices":["通る","エラーになる"],"answer":0,"evidence":{"type":"tsc","diag":[]}},{"id":"u4-3","kind":"tf","q":"この TypeScript は型チェックを通る？","code":"type User = { id: number; name: string; email?: string };\nfunction mailLength(u: User) {\n  return u.email.length;\n}","explain":"`email` は `string | undefined`。undefined の可能性があるまま `.length` は使えない。`u.email?.length` や、先に undefined を確かめる書き方にする。","multiFile":false,"choices":["通る","エラーになる"],"answer":1,"evidence":{"type":"tsc","diag":[{"file":"main.ts","line":3,"code":18048,"message":"'u.email' is possibly 'undefined'."}]}},{"id":"u4-4","kind":"tf","q":"この TypeScript は型チェックを通る？","code":"type User = { readonly id: number; name: string };\nconst u: User = { id: 1, name: \"Ken\" };\nu.id = 2;","explain":"`readonly` のプロパティには再代入できない。`name` なら変えられる。","multiFile":false,"choices":["通る","エラーになる"],"answer":1,"evidence":{"type":"tsc","diag":[{"file":"main.ts","line":3,"code":2540,"message":"Cannot assign to 'id' because it is a read-only property."}]}},{"id":"u4-5","kind":"tf","q":"この TypeScript は型チェックを通る？","code":"type User = { id: number; name: string };\nconst u: User = { id: 1, name: \"Ken\", age: 30 };","explain":"オブジェクトリテラルを直接書くと、型に無い `age` はエラー（打ち間違いを見つけるためのチェック）。","multiFile":false,"choices":["通る","エラーになる"],"answer":1,"evidence":{"type":"tsc","diag":[{"file":"main.ts","line":2,"code":2353,"message":"Object literal may only specify known properties, and 'age' does not exist in type 'User'."}]}},{"id":"u4-6","kind":"pick","q":"`type` と `interface` の違いとして正しいものは？","code":null,"explain":"どちらも型なので実行時には残らない。interface にもメソッドは書けるし、type でもオブジェクトの形は表せる。合体（宣言のマージ）は interface だけの性質。","multiFile":false,"choices":["interface は同じ名前で2回書くと、宣言が合体する","type は実行時にも残る","interface にはメソッドを書けない","type ではオブジェクトの形を表せない"],"answer":0,"evidence":null}]},{"id":"u5","title":"関数の型","min":7,"lead":"関数は引数に型を書き、戻り値は推論に任せることが多い。コールバックは引数の型まで推論される。","points":["引数には型を書く。戻り値は推論されるが、`function f(): string` と書くと、中身が合わないときにその場でエラーになる。","省略できる引数は `b?: number`（中では `number | undefined`）。既定値つきの `b = 1` なら中では `number`。","関数そのものの型は `(value: number) => string` と書く。","`map` のコールバックのように、渡す先の型が決まっていれば引数の型は書かなくてよい（文脈から推論される）。","戻り値がない関数は `void`。","Swift の引数ラベルはない。名前付きで渡したいときは、オブジェクト1つを受け取って分割代入する。"],"swift":[["`func greet(name: String) -> String`","`function greet(name: string): string`"],["`(Int) -> String`","`(value: number) => string`"],["引数ラベル `create(name: \"Ken\", age: 30)`","オブジェクトで渡す `create({ name: \"Ken\", age: 30 })`"]],"examples":[{"title":"関数の書き方","code":"function greet(name: string, greeting = \"こんにちは\"): string {\n  return greeting + \"、\" + name;\n}\n\ntype Formatter = (value: number) => string;\nconst yen: Formatter = (value) => value.toLocaleString() + \"円\"; // value は number\n\nfunction createUser({ name, age }: { name: string; age: number }) {\n  return { name, age };\n}\ncreateUser({ name: \"Ken\", age: 30 });","multiFile":false}],"questions":[{"id":"u5-1","kind":"tf","q":"この TypeScript は型チェックを通る？","code":"function getTitle(): string {\n  return 42;\n}","explain":"戻り値を `string` と明示しているので、42 を返すとその場でエラーになる。","multiFile":false,"choices":["通る","エラーになる"],"answer":1,"evidence":{"type":"tsc","diag":[{"file":"main.ts","line":2,"code":2322,"message":"Type 'number' is not assignable to type 'string'."}]}},{"id":"u5-2","kind":"tf","q":"この TypeScript は型チェックを通る？","code":"function area(width: number, height: number) {\n  return width * height;\n}\narea(10);","explain":"引数は2つ必要。JavaScript なら `height` が undefined のまま動き、結果は NaN になる。","multiFile":false,"choices":["通る","エラーになる"],"answer":1,"evidence":{"type":"tsc","diag":[{"file":"main.ts","line":4,"code":2554,"message":"Expected 2 arguments, but got 1."}]}},{"id":"u5-3","kind":"tf","q":"この TypeScript は型チェックを通る？","code":"function addTax(price: number, rate?: number) {\n  return price * (1 + rate);\n}","explain":"`rate?` は `number | undefined`。undefined の可能性があるまま計算に使えない。既定値 `rate = 0.1` にすれば `number` になる。","multiFile":false,"choices":["通る","エラーになる"],"answer":1,"evidence":{"type":"tsc","diag":[{"file":"main.ts","line":2,"code":18048,"message":"'rate' is possibly 'undefined'."}]}},{"id":"u5-4","kind":"type","q":"関数の中での `rate` の型は？","code":"function addTax(price: number, rate = 0.1) {\n  return price * (1 + rate);\n}","explain":"既定値があると、中では必ず値が入っているので `number`。呼ぶ側は `addTax(1000)` と省略できる。","multiFile":false,"choices":["number","number | undefined","0.1","any"],"answer":0,"evidence":{"type":"types"}},{"id":"u5-5","kind":"type","q":"`labels` の型は？","code":"const nums = [1, 2, 3];\nconst labels = nums.map((n) => n.toFixed(1));","explain":"`n` は `number` と推論され、`toFixed` は string を返すので `string[]`。","multiFile":false,"choices":["string[]","number[]","any[]","(string | number)[]"],"answer":0,"evidence":{"type":"types"}},{"id":"u5-6","kind":"type","q":"`judge` の戻り値の型は？","code":"function judge(score: number) {\n  if (score >= 60) return \"pass\";\n  return \"fail\";\n}","explain":"返しうる値が2つの文字列なので、その union になる。`ReturnType\u003ctypeof judge>` は関数の戻り値の型を取り出す書き方。","multiFile":false,"choices":["\"pass\" | \"fail\"","string","boolean","void"],"answer":0,"evidence":{"type":"types"}}]},{"id":"u6","title":"union 型と絞り込み","min":8,"lead":"`A | B` は「A か B のどちらか」。使う前に条件分岐でどちらかに絞り込むと、その中では絞った型として扱える。","points":["`string | number` の値に使えるのは、両方に共通する操作だけ。","文字列リテラルの union `\"draft\" | \"published\"` は、Swift の（値を持たない）enum の代わりによく使われる。","絞り込み（narrowing）に使う書き方: `typeof x === \"string\"`、`x === \"draft\"`、`\"meow\" in pet`、`Array.isArray(x)`、`x instanceof Date`。","if・switch・早めの return の流れを TypeScript が追って、自動で型を狭める。Swift の `if let` / `guard let` に近い感覚。"],"swift":[["`enum Status { case draft, published }`","`type Status = \"draft\" | \"published\"`"],["`if let` / `guard let` で型が変わる","if や return の流れで型が狭まる"]],"examples":[{"title":"絞り込み","code":"type Status = \"draft\" | \"published\" | \"archived\";\n\nfunction label(status: Status) {\n  if (status === \"draft\") return \"下書き\";\n  if (status === \"published\") return \"公開中\";\n  return \"アーカイブ\"; // ここでは status は \"archived\"\n}\n\nfunction toText(value: string | number) {\n  if (typeof value === \"number\") {\n    return value.toFixed(2); // number として使える\n  }\n  return value.toUpperCase(); // 残りは string\n}","multiFile":false}],"questions":[{"id":"u6-1","kind":"tf","q":"この TypeScript は型チェックを通る？","code":"function size(x: string | string[]) {\n  return x.length;\n}","explain":"string にも配列にも `length` があるので、絞り込まなくても使える。共通の操作なら OK。","multiFile":false,"choices":["通る","エラーになる"],"answer":0,"evidence":{"type":"tsc","diag":[]}},{"id":"u6-2","kind":"tf","q":"この TypeScript は型チェックを通る？","code":"function upper(x: string | number) {\n  return x.toUpperCase();\n}","explain":"`toUpperCase` は string にしかない。`typeof x === \"string\"` で絞り込んでから使う。","multiFile":false,"choices":["通る","エラーになる"],"answer":1,"evidence":{"type":"tsc","diag":[{"file":"main.ts","line":2,"code":2339,"message":"Property 'toUpperCase' does not exist on type 'string | number'.\nProperty 'toUpperCase' does not exist on type 'number'."}]}},{"id":"u6-3","kind":"tf","q":"この TypeScript は型チェックを通る？","code":"type Status = \"draft\" | \"published\";\nlet s: Status = \"deleted\";","explain":"`Status` に入るのは 2 つの文字列だけ。打ち間違いもここで見つかる。","multiFile":false,"choices":["通る","エラーになる"],"answer":1,"evidence":{"type":"tsc","diag":[{"file":"main.ts","line":2,"code":2322,"message":"Type '\"deleted\"' is not assignable to type 'Status'."}]}},{"id":"u6-4","kind":"type","q":"コメントの位置での `x` の型は？","code":"function f(x: string | number | boolean) {\n  if (typeof x === \"string\") {\n    return;\n  }\n  // ここでの x の型は？\n}","explain":"string なら return しているので、そこから先に来るのは number か boolean だけ。早めの return でも絞り込みは効く。","multiFile":false,"choices":["number | boolean","string | number | boolean","string","never"],"answer":0,"evidence":{"type":"types"}},{"id":"u6-5","kind":"tf","q":"この TypeScript は型チェックを通る？","code":"type Cat = { meow(): void };\ntype Dog = { bark(): void };\n\nfunction speak(pet: Cat | Dog) {\n  if (\"meow\" in pet) {\n    pet.meow();\n  } else {\n    pet.bark();\n  }\n}","explain":"`\"meow\" in pet` で Cat に絞り込まれ、else では Dog になる。","multiFile":false,"choices":["通る","エラーになる"],"answer":0,"evidence":{"type":"tsc","diag":[]}}]},{"id":"u7","title":"null と undefined","min":9,"lead":"Swift の Optional に当たるもの。strict 設定では、null や undefined が入りうるかを型で区別する。","points":["strict 設定（`strictNullChecks`）では、`string` に null も undefined も入らない。入りうるなら `string | undefined` のように型に書く。","JavaScript には「値がない」を表す値が `null` と `undefined` の2つある。現場のコードでどちらを使っているかを見ておく。","`?.` と `??` は Swift とほぼ同じ感覚で使える。","絞り込みは `if (x !== undefined)` や `if (x != null)`（`!=` は null と undefined の両方を弾く）。`if (x)` は `\"\"` や `0` も弾くので、文字列や数値では注意。","`x!`（非 null アサーション）は Swift の強制アンラップに似ているが、実行時には何もしない。`x!` 自体では止まらず、undefined のままプロパティを読めばその場で TypeError、読まなければ undefined のまま先へ進む。","`find` や `Map` の `get` の戻り値は `T | undefined`。一方、配列の `arr[0]` は既定では `T` のまま（`noUncheckedIndexedAccess` を有効にすると `T | undefined`）。"],"swift":[["`String?`","`string | undefined`（または `string | null`）"],["`if let name { }`","`if (name !== undefined) { }`"],["`guard let name else { return }`","`if (name === undefined) return;`"],["`a?.b` / `a ?? b`","`a?.b` / `a ?? b`（ほぼ同じ）"],["`x!`（nil ならその場でクラッシュ）","`x!`（実行時は何もしない。undefined のまま進む）"]],"examples":[{"title":"Optional の扱い","code":"type User = { name: string; nickname?: string };\n\nfunction displayName(user: User | undefined) {\n  if (user === undefined) return \"ゲスト\"; // guard let の代わり\n  return user.nickname ?? user.name;      // ここでは user は User\n}","multiFile":false}],"questions":[{"id":"u7-1","kind":"tf","q":"この TypeScript は型チェックを通る？","code":"let name: string = null;","explain":"strict 設定では `string` に null は入らない。入れたいなら `string | null` と書く。","multiFile":false,"choices":["通る","エラーになる"],"answer":1,"evidence":{"type":"tsc","diag":[{"file":"main.ts","line":1,"code":2322,"message":"Type 'null' is not assignable to type 'string'."}]}},{"id":"u7-2","kind":"tf","q":"この TypeScript は型チェックを通る？","code":"const users = [{ id: 1, name: \"Ken\" }];\nconst found = users.find((u) => u.id === 2);\nconsole.log(found.name);","explain":"`find` は見つからないと undefined を返すので、`found` は `{...} | undefined`。`found?.name` や、undefined を確かめてから使う。","multiFile":false,"choices":["通る","エラーになる"],"answer":1,"evidence":{"type":"tsc","diag":[{"file":"main.ts","line":3,"code":18048,"message":"'found' is possibly 'undefined'."}]}},{"id":"u7-3","kind":"type","q":"`bio` の戻り値の型は？","code":"type User = { name: string; profile?: { bio: string } };\nfunction bio(u: User) {\n  return u.profile?.bio;\n}","explain":"`profile` が無ければ `?.` で undefined になるので、`string | undefined`。","multiFile":false,"choices":["string | undefined","string","string | null","undefined"],"answer":0,"evidence":{"type":"types"}},{"id":"u7-4","kind":"out","q":"表示されるのは？","code":"function show(input: string | undefined) {\n  console.log(JSON.stringify([input ?? \"ゲスト\", input || \"ゲスト\"]));\n}\nshow(\"\");","explain":"空文字は undefined ではないので `??` はそのまま `\"\"`。`||` は空文字を falsy として右を使う。入力欄の値などで差が出る。","multiFile":false,"choices":["[\"\",\"ゲスト\"]","[\"ゲスト\",\"ゲスト\"]","[\"\",\"\"]","[\"ゲスト\",\"\"]"],"answer":0,"evidence":{"type":"run","stdout":"[\"\",\"ゲスト\"]"}},{"id":"u7-5","kind":"out","q":"実行するとどうなる？","code":"const settings = new Map\u003cstring, string>();\nconst theme = settings.get(\"theme\")!;\nconsole.log(theme);","explain":"`!` は型の上で undefined を消すだけで、実行時には何もしない。Swift の強制アンラップと違い、ここでは止まらずに undefined のまま進む。","multiFile":false,"choices":["undefined と表示される","実行時エラーで止まる","型エラーになる","空の文字列が表示される"],"answer":0,"evidence":{"type":"run","stdout":"undefined"}},{"id":"u7-6","kind":"type","q":"既定の設定で `first` の型は？","code":"const scores = [80, 90];\nconst first = scores[0];","explain":"配列の添字アクセスは、既定では undefined を含まない。空の配列でも `number` と扱われる。tsconfig の `noUncheckedIndexedAccess` を有効にすると `number | undefined` になる。","multiFile":false,"choices":["number","number | undefined","80","any"],"answer":0,"evidence":{"type":"types"}}]},{"id":"u8","title":"判別可能な union","min":8,"lead":"Swift の「値を持つ enum」に当たる書き方。共通のタグ（よく `kind` や `type`）を持つオブジェクトの union で表す。","points":["種類ごとに持つ値が違う型は、タグ付きのオブジェクトの union で書く。","タグで switch や if をすると、その分岐の中では型が絞り込まれ、その種類のプロパティが使える。","Swift の switch は網羅していないとコンパイルエラーだが、TypeScript の switch は網羅を強制しない。`never` 型の変数に入れる書き方で「書き漏れ」をエラーにできる。"],"swift":[["`enum Result { case ok(Int); case error(String) }`","`type Result = { kind: \"ok\"; value: number } | { kind: \"error\"; message: string }`"],["switch の網羅は自動でチェック","`never` を使って自分でチェックする"]],"examples":[{"title":"読み込み状態","code":"type LoadState =\n  | { kind: \"loading\" }\n  | { kind: \"success\"; data: string[] }\n  | { kind: \"failure\"; message: string };\n\nfunction render(state: LoadState): string {\n  switch (state.kind) {\n    case \"loading\":\n      return \"読み込み中\";\n    case \"success\":\n      return state.data.join(\", \"); // data が使える\n    case \"failure\":\n      return \"エラー: \" + state.message;\n    default: {\n      const unreachable: never = state; // case を書き忘れるとここでエラー\n      return unreachable;\n    }\n  }\n}","multiFile":false}],"questions":[{"id":"u8-1","kind":"tf","q":"この TypeScript は型チェックを通る？","code":"type Result =\n  | { kind: \"ok\"; value: number }\n  | { kind: \"error\"; message: string };\n\nfunction show(r: Result) {\n  return r.value;\n}","explain":"`value` は ok のときにしか無い。`if (r.kind === \"ok\")` で絞り込んでから使う。","multiFile":false,"choices":["通る","エラーになる"],"answer":1,"evidence":{"type":"tsc","diag":[{"file":"main.ts","line":6,"code":2339,"message":"Property 'value' does not exist on type 'Result'.\nProperty 'value' does not exist on type '{ kind: \"error\"; message: string; }'."}]}},{"id":"u8-2","kind":"tf","q":"この TypeScript は型チェックを通る？","code":"type Result =\n  | { kind: \"ok\"; value: number }\n  | { kind: \"error\"; message: string };\n\nfunction show(r: Result) {\n  if (r.kind === \"ok\") return r.value;\n  return r.message;\n}","explain":"if で ok に絞り込まれ、その後ろは error だけになる。","multiFile":false,"choices":["通る","エラーになる"],"answer":0,"evidence":{"type":"tsc","diag":[]}},{"id":"u8-3","kind":"tf","q":"この TypeScript は型チェックを通る？","code":"type Shape =\n  | { kind: \"circle\"; radius: number }\n  | { kind: \"square\"; size: number }\n  | { kind: \"triangle\"; base: number; height: number };\n\nfunction area(s: Shape): number {\n  switch (s.kind) {\n    case \"circle\":\n      return Math.PI * s.radius ** 2;\n    case \"square\":\n      return s.size ** 2;\n    default: {\n      const rest: never = s;\n      return rest;\n    }\n  }\n}","explain":"triangle の case が無いので、default に triangle が来うる。`never` には何も入らないのでエラーになり、書き漏れに気づける。","multiFile":false,"choices":["通る","エラーになる"],"answer":1,"evidence":{"type":"tsc","diag":[{"file":"main.ts","line":13,"code":2322,"message":"Type '{ kind: \"triangle\"; base: number; height: number; }' is not assignable to type 'never'."}]}},{"id":"u8-4","kind":"type","q":"triangle の case が無いこの関数の戻り値の型は？（型チェックは通る）","code":"type Shape =\n  | { kind: \"circle\"; radius: number }\n  | { kind: \"square\"; size: number }\n  | { kind: \"triangle\"; base: number; height: number };\n\nfunction label(s: Shape) {\n  switch (s.kind) {\n    case \"circle\":\n      return \"円\";\n    case \"square\":\n      return \"四角\";\n  }\n}","explain":"網羅していなくてもエラーにならず、triangle のときは何も返さない（undefined）。戻り値の型を明示する（`: string`）か `never` を使うと、漏れをエラーにできる。","multiFile":false,"choices":["\"円\" | \"四角\" | undefined","\"円\" | \"四角\"","string","never"],"answer":0,"evidence":{"type":"types"}},{"id":"u8-5","kind":"pick","q":"Swift の「値を持つ enum」を TypeScript で表す一般的な方法は？","code":null,"explain":"TypeScript の `enum` が持てるのは、メンバーごとに固定の数値か文字列（Swift の raw value に当たるもの）だけで、関連値は持てない。種類ごとに違う値を持たせるなら、タグ付きの union を使う。","multiFile":false,"choices":["共通のタグを持つオブジェクトの union","enum キーワード","class の継承","any 型"],"answer":0,"evidence":null}]},{"id":"u9","title":"構造的型付け","min":7,"lead":"Swift との一番大きな違い。TypeScript は「名前」ではなく「形」で型が合うかを判断する。","points":["必要なプロパティとその型（形）を持っていれば、その型に代入できる。これを構造的型付けという。","Swift では `struct A: Proto` と宣言したものだけが Proto に合う。TypeScript では、class が interface を `implements` していなくても、形が合えば入る。","別名を付けただけの型は区別されない。`type UserId = string` と `type PostId = string` はどちらも string なので、取り違えてもエラーにならない。","余分なプロパティのエラーは、オブジェクトリテラルを直接書いたときだけ。一度変数に入れてから渡すと、多い分には通る。","例外として、`private` や `#` のメンバーを持つ class は、形が同じでも別の class とは互換にならない。"],"swift":[["`struct Pen: Named` と準拠を宣言する","宣言しなくても形が合えば OK"],["型の名前が違えば別の型","名前が違っても形が同じなら同じ型"]],"examples":[{"title":"形が合えば入る","code":"interface Point {\n  x: number;\n  y: number;\n}\n\nclass Pixel { // implements Point とは書いていない\n  x = 0;\n  y = 0;\n  color = \"red\";\n}\n\nconst p: Point = new Pixel(); // 形が合うので OK","multiFile":false}],"questions":[{"id":"u9-1","kind":"tf","q":"この TypeScript は型チェックを通る？","code":"interface Named {\n  name: string;\n}\nclass Product {\n  name = \"ペン\";\n  price = 120;\n}\nconst n: Named = new Product();","explain":"`Product` は `name: string` を持っているので `Named` に入る。`implements Named` の宣言は要らない。","multiFile":false,"choices":["通る","エラーになる"],"answer":0,"evidence":{"type":"tsc","diag":[]}},{"id":"u9-2","kind":"tf","q":"この TypeScript は型チェックを通る？","code":"type UserId = string;\ntype PostId = string;\n\nfunction deleteUser(id: UserId) {}\n\nconst postId: PostId = \"post-1\";\ndeleteUser(postId);","explain":"`UserId` も `PostId` も中身は string なので区別されない。ID の取り違えは型では防げない（防ぎたいときは「ブランド型」という書き方を使う）。","multiFile":false,"choices":["通る","エラーになる"],"answer":0,"evidence":{"type":"tsc","diag":[]}},{"id":"u9-3","kind":"tf","q":"この TypeScript は型チェックを通る？","code":"type Point = { x: number; y: number };\nconst p: Point = { x: 1, y: 2, z: 3 };","explain":"オブジェクトリテラルを直接書いたので、余分な `z` がエラーになる。","multiFile":false,"choices":["通る","エラーになる"],"answer":1,"evidence":{"type":"tsc","diag":[{"file":"main.ts","line":2,"code":2353,"message":"Object literal may only specify known properties, and 'z' does not exist in type 'Point'."}]}},{"id":"u9-4","kind":"tf","q":"この TypeScript は型チェックを通る？","code":"type Point = { x: number; y: number };\nconst raw = { x: 1, y: 2, z: 3 };\nconst p: Point = raw;","explain":"変数経由だと余分なプロパティのチェックは働かない。必要な `x` と `y` があるので入る。","multiFile":false,"choices":["通る","エラーになる"],"answer":0,"evidence":{"type":"tsc","diag":[]}},{"id":"u9-5","kind":"tf","q":"この TypeScript は型チェックを通る？","code":"type Point = { x: number; y: number };\nconst raw = { x: 1 };\nconst p: Point = raw;","explain":"足りない方はどこから渡してもエラー。`y` が無い。","multiFile":false,"choices":["通る","エラーになる"],"answer":1,"evidence":{"type":"tsc","diag":[{"file":"main.ts","line":3,"code":2741,"message":"Property 'y' is missing in type '{ x: number; }' but required in type 'Point'."}]}}]},{"id":"u10","title":"ジェネリクス","min":7,"lead":"書き方は Swift とほぼ同じ `\u003cT>`。呼ぶ側では多くの場合、引数から T が推論される。","points":["`function first\u003cT>(items: T[]): T | undefined` のように型の引数を取る。","制約は `\u003cT extends { id: number }>`（Swift の `\u003cT: Proto>` や `where` に当たる）。構造的型付けなので、その形を持っていればよい。","よく見るジェネリックな型: `Array\u003cT>`（= `T[]`）、`Promise\u003cT>`、`Map\u003cK, V>`、`Record\u003cK, V>`。"],"swift":[["`func first\u003cT>(_ items: [T]) -> T?`","`function first\u003cT>(items: T[]): T | undefined`"],["`\u003cT: Identifiable>`","`\u003cT extends { id: number }>`"],["`[String: Int]`","`Record\u003cstring, number>` や `Map\u003cstring, number>`"]],"examples":[{"title":"ジェネリック関数","code":"function first\u003cT>(items: T[]): T | undefined {\n  return items[0];\n}\nconst n = first([10, 20]);   // number | undefined\nconst s = first([\"a\", \"b\"]); // string | undefined\n\nfunction byId\u003cT extends { id: number }>(items: T[], id: number) {\n  return items.find((item) => item.id === id);\n}","multiFile":false}],"questions":[{"id":"u10-1","kind":"type","q":"`flag` の型は？","code":"function first\u003cT>(items: T[]): T | undefined {\n  return items[0];\n}\nconst flag = first([true, false]);","explain":"引数から T が `boolean` と推論され、戻り値は `boolean | undefined`。","multiFile":false,"choices":["boolean | undefined","boolean","true | undefined","unknown"],"answer":0,"evidence":{"type":"types"}},{"id":"u10-2","kind":"tf","q":"この TypeScript は型チェックを通る？","code":"function first\u003cT>(items: T[]): T | undefined {\n  return items[0];\n}\nfirst\u003cstring>([1, 2]);","explain":"T を `string` と明示したので、引数は `string[]` でなければならない。","multiFile":false,"choices":["通る","エラーになる"],"answer":1,"evidence":{"type":"tsc","diag":[{"file":"main.ts","line":4,"code":2322,"message":"Type 'number' is not assignable to type 'string'."},{"file":"main.ts","line":4,"code":2322,"message":"Type 'number' is not assignable to type 'string'."}]}},{"id":"u10-3","kind":"tf","q":"この TypeScript は型チェックを通る？","code":"function byId\u003cT extends { id: number }>(items: T[], id: number) {\n  return items.find((item) => item.id === id);\n}\nbyId([{ name: \"Ken\" }], 1);","explain":"T は `{ id: number }` の形を持つ必要がある。`id` の無いオブジェクトは渡せない。","multiFile":false,"choices":["通る","エラーになる"],"answer":1,"evidence":{"type":"tsc","diag":[{"file":"main.ts","line":4,"code":2353,"message":"Object literal may only specify known properties, and 'name' does not exist in type '{ id: number; }'."}]}},{"id":"u10-4","kind":"type","q":"`apples` の型は？","code":"const stock = new Map\u003cstring, number>();\nstock.set(\"apple\", 3);\nconst apples = stock.get(\"apple\");","explain":"`Map` の `get` はキーが無いと undefined を返すので、直前に set していても `number | undefined`。","multiFile":false,"choices":["number | undefined","number","3","unknown"],"answer":0,"evidence":{"type":"types"}},{"id":"u10-5","kind":"type","q":"既定の設定で `english` の型は？","code":"const scores: Record\u003cstring, number> = { math: 80 };\nconst english = scores.english;","explain":"`Record\u003cstring, number>` は「どのキーでも number がある」という型なので `number` になる。実際に実行すると undefined。`Map` との違いに注意（`noUncheckedIndexedAccess` を有効にすると `number | undefined`）。","multiFile":false,"choices":["number","number | undefined","undefined","any"],"answer":0,"evidence":{"type":"types"}}]},{"id":"u11","title":"型から型を作る","min":8,"lead":"既存の型を組み替えて新しい型を作る道具。現場のコードで `Partial\u003cUser>` のような書き方を見たらこれ。","points":["`Partial\u003cT>`: 全部を省略可に。`Required\u003cT>`: 全部を必須に。`Readonly\u003cT>`: 全部を readonly に。","`Pick\u003cT, \"a\" | \"b\">`: 一部だけ取り出す。`Omit\u003cT, \"a\">`: 一部を除く。","`Record\u003cK, V>`: キーが K、値が V のオブジェクト。","`keyof T` は T のプロパティ名の union。","型の位置で `typeof 変数` と書くと、その変数の型を取り出せる（実行時の `typeof` 演算子とは別物）。","`as const` を付けると、値がリテラル型の readonly になる。配列から union 型を作るときによく使う。"],"swift":[],"examples":[{"title":"組み替えの例","code":"type User = { id: number; name: string; email: string };\n\ntype UserUpdate = Partial\u003cOmit\u003cUser, \"id\">>; // id 以外を、全部省略可に\nconst patch: UserUpdate = { name: \"新しい名前\" };\n\ntype UserKey = keyof User; // \"id\" | \"name\" | \"email\"\n\nconst ROLES = [\"admin\", \"editor\", \"viewer\"] as const;\ntype Role = (typeof ROLES)[number]; // \"admin\" | \"editor\" | \"viewer\"","multiFile":false}],"questions":[{"id":"u11-1","kind":"tf","q":"この TypeScript は型チェックを通る？","code":"type User = { id: number; name: string; email: string };\nconst draft: Partial\u003cUser> = {};","explain":"`Partial` で全部が省略可になるので、空のオブジェクトも入る。","multiFile":false,"choices":["通る","エラーになる"],"answer":0,"evidence":{"type":"tsc","diag":[]}},{"id":"u11-2","kind":"tf","q":"この TypeScript は型チェックを通る？","code":"type User = { id: number; name: string; email: string };\nconst summary: Pick\u003cUser, \"id\" | \"name\"> = {\n  id: 1,\n  name: \"Ken\",\n  email: \"ken@example.com\",\n};","explain":"`Pick` で取り出したのは `id` と `name` だけ。リテラルで `email` を書くと余分なプロパティでエラー。","multiFile":false,"choices":["通る","エラーになる"],"answer":1,"evidence":{"type":"tsc","diag":[{"file":"main.ts","line":5,"code":2353,"message":"Object literal may only specify known properties, and 'email' does not exist in type 'Pick\u003cUser, \"id\" | \"name\">'."}]}},{"id":"u11-3","kind":"type","q":"`UserKey` は？","code":"type User = { id: number; name: string; email: string };\ntype UserKey = keyof User;","explain":"`keyof` はプロパティ名の文字列リテラルの union を返す。","multiFile":false,"choices":["\"id\" | \"name\" | \"email\"","string","User","[\"id\", \"name\", \"email\"]"],"answer":0,"evidence":{"type":"types"}},{"id":"u11-4","kind":"type","q":"`Config` は？","code":"const config = { theme: \"dark\", fontSize: 14 };\ntype Config = typeof config;","explain":"オブジェクトのプロパティは後から変えられるので、`\"dark\"` ではなく `string` に広がる。","multiFile":false,"choices":["{ theme: string; fontSize: number }","{ theme: \"dark\"; fontSize: 14 }","\"config\"","object"],"answer":0,"evidence":{"type":"types"}},{"id":"u11-5","kind":"type","q":"`as const` を付けると `Config` は？","code":"const config = { theme: \"dark\", fontSize: 14 } as const;\ntype Config = typeof config;","explain":"`as const` は値そのものの型にして、全部を readonly にする。","multiFile":false,"choices":["{ readonly theme: \"dark\"; readonly fontSize: 14 }","{ theme: string; fontSize: number }","{ readonly theme: string; readonly fontSize: number }","{ theme: \"dark\"; fontSize: 14 }"],"answer":0,"evidence":{"type":"types"}},{"id":"u11-6","kind":"tf","q":"この TypeScript は型チェックを通る？","code":"type User = { id: number; name: string };\nconst user: Readonly\u003cUser> = { id: 1, name: \"Ken\" };\nuser.name = \"Taro\";","explain":"`Readonly\u003cUser>` は全プロパティが readonly。","multiFile":false,"choices":["通る","エラーになる"],"answer":1,"evidence":{"type":"tsc","diag":[{"file":"main.ts","line":3,"code":2540,"message":"Cannot assign to 'name' because it is a read-only property."}]}}]},{"id":"u12","title":"any・unknown・as","min":8,"lead":"型チェックを弱める道具。現場のコードで見かけたら「ここは型が守ってくれない」という目印になる。","points":["`any` は型チェックを止める。何でも入り、何でも呼べる。間違いは実行するまで分からず、any から取り出した値も any として広がる。","`unknown` も何でも入るが、使う前に絞り込みが必要。外から来た値は unknown で受けると安全。","`JSON.parse` の戻り値は `any`。そのまま使うと型チェックが効かない。","`値 as 型` は型アサーション。コンパイラに「この型として扱って」と伝えるだけで、実行時の変換もチェックもしない。Swift の `as?`（失敗なら nil）や `as!`（失敗ならクラッシュ）とは違う。","明らかに無関係な型への `as` はエラーになるが、`as unknown as 型` と2段にすると通ってしまう。見かけたら要注意。","API のレスポンスに型を付けても、中身が本当にその形かは保証されない。実行時に確かめたいときは zod などの検証ライブラリを使う。"],"swift":[["`Any`（使う前にキャストが要る）","`unknown`（使う前に絞り込みが要る）"],["対応なし","`any`（チェックを止める）"],["`as?` / `as!`（実行時に確かめる）","`as`（確かめない）"]],"examples":[{"title":"unknown を絞り込む","code":"const raw: unknown = JSON.parse('{\"name\":\"Ken\"}');\n\nif (typeof raw === \"object\" && raw !== null && \"name\" in raw) {\n  console.log(raw.name); // 絞り込んだので使える\n}","multiFile":false}],"questions":[{"id":"u12-1","kind":"tf","q":"この TypeScript は型チェックを通る？","code":"const v: unknown = \"hello\";\nv.toUpperCase();","explain":"unknown は、絞り込むまでプロパティを読んだりメソッドを呼んだりできない（代入や `===` での比較はできる）。`if (typeof v === \"string\")` の中なら使える。","multiFile":false,"choices":["通る","エラーになる"],"answer":1,"evidence":{"type":"tsc","diag":[{"file":"main.ts","line":2,"code":18046,"message":"'v' is of type 'unknown'."}]}},{"id":"u12-2","kind":"out","q":"このコードについて正しいのは？","code":"const v: any = 123;\nv.toUpperCase();","explain":"any なので型チェックは何も言わない。実行すると number に toUpperCase は無いので TypeError で止まる。","multiFile":false,"choices":["型チェックは通るが、実行するとエラーになる","型チェックでエラーになる","型チェックも通り、正常に動く","123 が文字列に変換される"],"answer":0,"evidence":{"type":"run","stdout":"","error":"TypeError: v.toUpperCase is not a function"}},{"id":"u12-3","kind":"out","q":"表示されるのは？","code":"const input = \"42\";\nconst n = input as unknown as number;\nconsole.log(typeof n);","explain":"`as` は型の上で扱いを変えるだけで、値は変換されない。中身は文字列の \"42\" のまま。数値にしたいなら `Number(input)`。","multiFile":false,"choices":["string","number","undefined","object"],"answer":0,"evidence":{"type":"run","stdout":"string"}},{"id":"u12-4","kind":"tf","q":"この TypeScript は型チェックを通る？","code":"const n = \"42\" as number;","explain":"string と number は重なりが無いので、直接の `as` はエラーになる。`as unknown as number` と2段にすると通ってしまうが、値は変わらない。","multiFile":false,"choices":["通る","エラーになる"],"answer":1,"evidence":{"type":"tsc","diag":[{"file":"main.ts","line":1,"code":2352,"message":"Conversion of type 'string' to type 'number' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first."}]}},{"id":"u12-5","kind":"type","q":"`data` の型は？","code":"const data = JSON.parse('{\"id\":1}');","explain":"`JSON.parse` の戻り値は any。中身を TypeScript は知らない。unknown で受けて絞り込むか、検証してから使う。","multiFile":false,"choices":["any","unknown","{ id: number }","object"],"answer":0,"evidence":{"type":"types"}},{"id":"u12-6","kind":"pick","q":"API のレスポンスに `as User` を付けた。正しい説明は？","code":null,"explain":"`as` はチェックも変換もしない。サーバーの仕様が変わってプロパティ名が変わっても、型チェックは通ってしまう。","multiFile":false,"choices":["実際の形が違っても型チェックは通り、問題は実行時に出る","形が違えば、その場で例外が投げられる","形が違えば、User の形に変換される","形が違えば、型チェックでエラーになる"],"answer":0,"evidence":null}]},{"id":"u13","title":"Promise と async/await","min":8,"lead":"書き方は Swift の async/await に近い。違いは、戻り値が `Promise\u003cT>` という型になることと、失敗しうるかどうかが型に出ないこと。","points":["`async` 関数の戻り値の型は必ず `Promise\u003cT>`。`return 3` なら `Promise\u003cnumber>`。","`await` を付けると中身の `T` が取り出せる。付け忘れても、戻り値を使っていれば型エラーで気づけることが多い。ただし `save();` のように戻り値を使わない呼び出しで忘れても、型エラーにならない（ESLint の `no-floating-promises` というルールで見つけられる）。","並べて待つなら `Promise.all([a(), b()])`。結果はタプルとして型が付く。","`catch (e)` の `e` は strict 設定では `unknown`。`e instanceof Error` で絞り込んでから `e.message` を使う。","Swift の `throws` のように「投げるかどうか」は型に出ない。どの関数が失敗しうるかは型からは分からない。","Promise は作った時点で動き始める（`await` しなくても処理は実行される）。"],"swift":[["`func load() async throws -> User`","`async function load(): Promise\u003cUser>`（throws は型に出ない）"],["`try await load()`","`await load()`（try は try/catch で囲む）"],["`async let` で並べて待つ","`Promise.all([...])`"]],"examples":[{"title":"API を呼ぶ","code":"type User = { id: number; name: string };\n\nasync function fetchUser(id: number): Promise\u003cUser> {\n  const res = await fetch(\"/api/users/\" + id);\n  if (!res.ok) throw new Error(\"HTTP \" + res.status);\n  return (await res.json()) as User; // json() はブラウザの型定義では Promise\u003cany>。as は検証しない\n}\n\nasync function main() {\n  try {\n    const [a, b] = await Promise.all([fetchUser(1), fetchUser(2)]);\n    console.log(a.name, b.name);\n  } catch (e) {\n    if (e instanceof Error) console.log(e.message);\n  }\n}","multiFile":false}],"questions":[{"id":"u13-1","kind":"type","q":"`getCount` の戻り値の型は？","code":"async function getCount() {\n  return 3;\n}","explain":"async 関数は必ず Promise を返す。中身は `number` に広がる。","multiFile":false,"choices":["Promise\u003cnumber>","number","Promise\u003c3>","Promise\u003cvoid>"],"answer":0,"evidence":{"type":"types"}},{"id":"u13-2","kind":"tf","q":"この TypeScript は型チェックを通る？","code":"async function getCount() {\n  return 3;\n}\nasync function main() {\n  const count = getCount();\n  console.log(count + 1);\n}","explain":"`await` を忘れているので `count` は `Promise\u003cnumber>`。Promise に + 1 はできない。`const count = await getCount()` にする。","multiFile":false,"choices":["通る","エラーになる"],"answer":1,"evidence":{"type":"tsc","diag":[{"file":"main.ts","line":6,"code":2365,"message":"Operator '+' cannot be applied to types 'Promise\u003cnumber>' and '1'."}]}},{"id":"u13-3","kind":"tf","q":"この TypeScript は型チェックを通る？","code":"async function main() {\n  try {\n    await Promise.reject(new Error(\"失敗\"));\n  } catch (e) {\n    console.log(e.message);\n  }\n}","explain":"strict 設定では `e` は unknown。何が投げられるかは型から分からないので、`if (e instanceof Error)` で絞り込む。","multiFile":false,"choices":["通る","エラーになる"],"answer":1,"evidence":{"type":"tsc","diag":[{"file":"main.ts","line":5,"code":18046,"message":"'e' is of type 'unknown'."}]}},{"id":"u13-4","kind":"out","q":"表示される順番は？","code":"console.log(\"A\");\nsetTimeout(() => console.log(\"B\"), 0);\nPromise.resolve().then(() => console.log(\"C\"));\nconsole.log(\"D\");","explain":"同期の処理（A, D）が先に全部動く。そのあと Promise の続き（C）が、setTimeout（B）より先に動く。0 ミリ秒でも setTimeout は後回し。","multiFile":false,"choices":["A → D → C → B","A → B → C → D","A → D → B → C","A → C → D → B"],"answer":0,"evidence":{"type":"run","stdout":"A\nD\nC\nB"}},{"id":"u13-5","kind":"type","q":"`b` の型は？","code":"async function main() {\n  const [a, b] = await Promise.all([Promise.resolve(1), Promise.resolve(\"x\")]);\n}","explain":"`Promise.all` に配列を渡すと、結果は同じ並びのタプルになる。2番目は `string`。","multiFile":false,"choices":["string","number","Promise\u003cstring>","string | number"],"answer":0,"evidence":{"type":"types"}}]},{"id":"u14","title":"モジュールと現場コードの読み方","min":7,"lead":"最後は、現場のプロジェクトを開いたときに出てくるもの。ファイルのつながりと設定ファイルの見方。","points":["ファイルの外から使えるのは `export` したものだけ。`export default` は1ファイルに1つで、`import` 側が好きな名前を付けられる。","`import type { User } from \"./types\"` は型だけを読み込む書き方。出力される JavaScript からは消える。","`tsconfig.json` がプロジェクトの設定。まず `strict` を見る（`strictNullChecks` や `noImplicitAny` などをまとめて有効にする設定）。TypeScript 6.0 以降は書かなくても strict が有効だが、5.x では `\"strict\": true` と書かないと無効。このドリルは strict が有効な前提で作っている。","`.d.ts` は型の情報だけを書いたファイル。JavaScript で書かれたライブラリに型を付けるもので、`@types/〇〇` というパッケージで入れることが多い。","`enum` は TypeScript 独自の機能で、型だけでなく実行時のオブジェクトも作る（型が消えるという原則の例外）。そのため、Node.js が `.ts` を型を取り除くだけで直接実行する方式では enum は動かない。現場によっては enum の代わりに文字列リテラルの union を使う。","VS Code では、変数にマウスを乗せると型が表示され、F12 で定義へ移動できる。読むときの一番の味方。"],"swift":[["同じモジュール内は import 不要","ファイルごとに export / import が必要"],["`public` / `internal`","`export` したものだけが外から見える"]],"examples":[{"title":"export と import","code":"// types.ts\nexport type User = { id: number; name: string };\nexport const MAX_USERS = 100;\n\n// user-service.ts\nimport type { User } from \"./types\";\nimport { MAX_USERS } from \"./types\";\n\nexport default function canAdd(users: User[]): boolean {\n  return users.length \u003c MAX_USERS;\n}","multiFile":true}],"questions":[{"id":"u14-1","kind":"pick","q":"`import type { User } from \"./types\"` について正しいものは？","code":null,"explain":"型は実行時に存在しないので、型だけの import は出力から消える。値（関数や定数）は通常の import で読み込む。","multiFile":false,"choices":["型だけを読み込み、出力される JavaScript からは消える","User を実行時の値として使えるようにする","types.ts の中身を全部読み込む","User の型をコピーして新しい型を作る"],"answer":0,"evidence":null},{"id":"u14-2","kind":"out","q":"表示されるのは？","code":"enum Color {\n  Red,\n  Green,\n  Blue,\n}\nconsole.log(Color.Green, Color[2]);","explain":"数値の enum は 0 から番号が振られ、実行時のオブジェクトとして残る。番号から名前を引く逆引きもできる。","multiFile":false,"choices":["1 Blue","Green Blue","undefined undefined","1 2"],"answer":0,"evidence":{"type":"run","stdout":"1 Blue"}},{"id":"u14-3","kind":"tf","q":"math.ts が `export default function add(a: number, b: number) { return a + b; }` のとき、この main.ts は型チェックを通る？","code":"import plus from \"./math\";\nconsole.log(plus(1, 2));","explain":"`export default` されたものは、import 側で好きな名前（ここでは plus）を付けられる。","multiFile":true,"choices":["通る","エラーになる"],"answer":0,"evidence":{"type":"tsc","diag":[]}},{"id":"u14-4","kind":"pick","q":"tsconfig.json の `\"strict\": true` について正しいものは？","code":null,"explain":"strict は複数のチェックをまとめて有効にする設定。出力を止めるのは `noEmitOnError`。明示的に書いた `any` はエラーにならない（暗黙の any がエラーになる）。","multiFile":false,"choices":["strictNullChecks や noImplicitAny など、厳しいチェックをまとめて有効にする","型エラーがあると JavaScript を出力しなくなる","実行時にも型をチェックするようになる","any 型を書くとエラーになる"],"answer":0,"evidence":null},{"id":"u14-5","kind":"pick","q":"`.d.ts` ファイルとは？","code":null,"explain":"中身は型の宣言だけで、実行されるコードは入らない。JavaScript のライブラリに型を付けるために使う。","multiFile":false,"choices":["型の情報だけを書いたファイル","テスト用のファイル","TypeScript をコンパイルした結果の JavaScript","設定ファイル"],"answer":0,"evidence":null}]}]}</script>
+<script>window.Prism = { manual: true };</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
+<script>
+(() => {
+  const DATA = JSON.parse(document.getElementById("drill-data").textContent);
+  const UNITS = DATA.units;
+  const Q = new Map();
+  UNITS.forEach((u, ui) => u.questions.forEach((q, qi) => Q.set(q.id, { ...q, unit: u, unitNo: ui + 1, qNo: qi + 1 })));
+  const TOTAL = Q.size;
+  const STORE_KEY = "ts-drill-progress-v1";
+  const app = document.getElementById("app");
+
+  // ---------- 表示の部品 ----------
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const md = (s) => esc(s).replace(/`([^`]+)`/g, "<code>$1</code>");
+  const hl = (code) => {
+    try {
+      if (window.Prism && Prism.languages && Prism.languages.typescript) return Prism.highlight(code, Prism.languages.typescript, "typescript");
+    } catch (e) {}
+    return esc(code);
+  };
+  const playground = (code) => {
+    try {
+      if (window.LZString) return "https://www.typescriptlang.org/play/?#code/" + LZString.compressToEncodedURIComponent(code);
+    } catch (e) {}
+    return null;
+  };
+  function codeBlock(code, { name = "main.ts", hits = [], play = true } = {}) {
+    const lines = code.split("\n");
+    const gutter = lines.map((_, i) => `<span class="${hits.includes(i + 1) ? "hit" : ""}">${i + 1}</span>`).join("");
+    const url = play ? playground(code) : null;
+    return `<div class="code">
+      <div class="code-head"><span>${esc(name)}</span>${url ? `<a href="${esc(url)}" target="_blank" rel="noopener">Playground で試す ↗</a>` : ""}</div>
+      <div class="code-body"><div class="gutter" aria-hidden="true">${gutter}</div><pre><code>${hl(code)}</code></pre></div>
+    </div>`;
+  }
+  const JA = /[ぁ-んァ-ヶ一-龠]/;
+  const isCodeChoice = (q, text) => q.kind === "type" || (q.kind === "out" && !JA.test(text));
+
+  // ---------- 進捗 ----------
+  function emptyProgress() { return { answers: {}, resetAt: 0 }; }
+  function clean(p) {
+    const out = emptyProgress();
+    if (!p || typeof p !== "object") return out;
+    out.resetAt = typeof p.resetAt === "number" ? p.resetAt : 0;
+    const a = p.answers && typeof p.answers === "object" ? p.answers : {};
+    for (const [id, e] of Object.entries(a)) {
+      if (!Q.has(id) || !e || typeof e.ok !== "boolean" || typeof e.at !== "number") continue;
+      if (e.at < out.resetAt) continue;
+      out.answers[id] = { ok: e.ok, at: e.at, n: typeof e.n === "number" ? e.n : 1 };
+    }
+    return out;
+  }
+  function merge(a, b) {
+    const resetAt = Math.max(a.resetAt || 0, b.resetAt || 0);
+    const answers = {};
+    for (const src of [a.answers || {}, b.answers || {}]) {
+      for (const [id, e] of Object.entries(src)) {
+        if (e.at < resetAt) continue;
+        const cur = answers[id];
+        if (!cur || e.at > cur.at) answers[id] = { ...e, n: Math.max(e.n || 1, cur ? cur.n : 0) };
+      }
+    }
+    return { answers, resetAt };
+  }
+  function loadLocal() {
+    try { return clean(JSON.parse(localStorage.getItem(STORE_KEY) || "null")); } catch (e) { return emptyProgress(); }
+  }
+  function saveLocal() {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(progress)); } catch (e) {}
+  }
+  let progress = loadLocal();
+
+  const sync = { ref: null, timer: null, writing: false, dirty: false };
+  const syncEl = document.getElementById("sync");
+  function setSync(state) {
+    syncEl.dataset.state = state;
+    syncEl.textContent = {
+      local: "進捗はこの端末のブラウザに保存しています",
+      cloud: "進捗はアカウントに保存しています（スマホと PC で共通）",
+      saving: "進捗を保存しています…",
+      error: "アカウントへの保存に失敗しました。この端末には保存しています",
+    }[state];
+  }
+  async function pull() {
+    if (!sync.ref) return;
+    const snap = await sync.ref.get();
+    if (!snap.exists) return;
+    const merged = merge(progress, clean(snap.data()));
+    if (JSON.stringify(merged) !== JSON.stringify(progress)) {
+      progress = merged;
+      saveLocal();
+      if (view.name !== "quiz") render();
+    }
+  }
+  function schedulePush() {
+    saveLocal();
+    if (!sync.ref) return;
+    sync.dirty = true;
+    setSync("saving");
+    clearTimeout(sync.timer);
+    sync.timer = setTimeout(push, 1500);
+  }
+  async function push() {
+    if (!sync.ref || !sync.dirty) return;
+    if (sync.writing) { sync.timer = setTimeout(push, 800); return; }
+    sync.writing = true;
+    sync.dirty = false;
+    try {
+      const snap = await sync.ref.get();
+      if (snap.exists) progress = merge(progress, clean(snap.data()));
+      saveLocal();
+      await sync.ref.set({ v: 1, answers: progress.answers, resetAt: progress.resetAt, updatedAt: Date.now() });
+      setSync(sync.dirty ? "saving" : "cloud");
+    } catch (e) {
+      sync.dirty = true;
+      setSync("error");
+    } finally {
+      sync.writing = false;
+    }
+  }
+  (async () => {
+    try {
+      if (!window.claude || !window.claude.use) return;
+      const [db, user] = await Promise.all([window.claude.use("db"), window.claude.use("user")]);
+      const uid = user ? await user.id() : null;
+      if (!db || !uid) return;
+      sync.ref = db.doc("data/users/" + uid + "/progress");
+      await pull();
+      setSync("cloud");
+      if (Object.keys(progress.answers).length) { sync.dirty = true; push(); }
+    } catch (e) {
+      sync.ref = null;
+      setSync("local");
+    }
+  })();
+  document.addEventListener("visibilitychange", () => {
+    if (!sync.ref) return;
+    if (document.visibilityState === "hidden" && sync.dirty) { clearTimeout(sync.timer); push(); }
+    if (document.visibilityState === "visible") pull().catch(() => {});
+  });
+
+  function record(id, ok) {
+    const prev = progress.answers[id];
+    progress.answers[id] = { ok, at: Date.now(), n: (prev ? prev.n : 0) + 1 };
+    schedulePush();
+  }
+  const stateOf = (id) => {
+    const e = progress.answers[id];
+    return e ? (e.ok ? "ok" : "err") : "none";
+  };
+  function counts(ids) {
+    let ok = 0, err = 0;
+    for (const id of ids) { const s = stateOf(id); if (s === "ok") ok++; else if (s === "err") err++; }
+    return { ok, err, none: ids.length - ok - err };
+  }
+  const allIds = () => [...Q.keys()];
+  const wrongIds = () => allIds().filter((id) => stateOf(id) === "err");
+  function reviewIds() {
+    const answered = allIds().filter((id) => progress.answers[id]);
+    answered.sort((a, b) => {
+      const ea = progress.answers[a], eb = progress.answers[b];
+      if (ea.ok !== eb.ok) return ea.ok ? 1 : -1;
+      return ea.at - eb.at;
+    });
+    return shuffle(answered.slice(0, 8)).slice(0, 5);
+  }
+  function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+    return a;
+  }
+  function nextUnit() {
+    return UNITS.find((u) => u.questions.some((q) => stateOf(q.id) === "none"))
+      || UNITS.find((u) => u.questions.some((q) => stateOf(q.id) === "err"));
+  }
+
+  // ---------- 画面 ----------
+  let view = { name: "home" };
+  function go(next) {
+    view = next;
+    render();
+    window.scrollTo(0, 0);
+  }
+
+  function renderHome() {
+    const c = counts(allIds());
+    const nu = nextUnit();
+    const wrong = wrongIds().length;
+    const answered = TOTAL - c.none;
+    const rows = UNITS.map((u, i) => {
+      const ids = u.questions.map((q) => q.id);
+      const uc = counts(ids);
+      const done = uc.ok === ids.length;
+      const meta = done ? `<span class="chip done">完了</span>` : uc.none === ids.length ? `約${u.min}分` : `${uc.ok}/${ids.length} 正解`;
+      const cells = ids.map((id) => `<i class="cell ${stateOf(id) === "none" ? "" : stateOf(id)}"></i>`).join("");
+      return `<li><button class="unit-row" type="button" data-action="unit" data-unit="${u.id}">
+        <span class="no">${String(i + 1).padStart(2, "0")}</span><span class="t">${esc(u.title)}</span><span class="meta">${meta}</span>
+        <span class="cells" aria-hidden="true">${cells}</span></button></li>`;
+    }).join("");
+    app.innerHTML = `<div class="stack-lg">
+      <div class="stack">
+        <h1>TypeScript 隙間ドリル</h1>
+        <p class="muted" style="margin:0">JavaScript と Swift の知識から TypeScript へ。1単元 5〜9分、全${UNITS.length}単元・${TOTAL}問。問題のコードはすべて実際のコンパイラで確かめています。</p>
+      </div>
+      <section class="summary" aria-label="進み具合">
+        <div class="score"><b>${c.ok}</b><span class="muted">/ ${TOTAL} 問 正解</span>${answered ? `<span class="muted" style="margin-left:auto;font-size:13px">解いた ${answered}・間違い ${c.err}</span>` : ""}</div>
+        <div class="meter" aria-hidden="true"><i class="m-ok" style="width:${(c.ok / TOTAL) * 100}%"></i><i class="m-err" style="width:${(c.err / TOTAL) * 100}%"></i></div>
+        <div class="actions">
+          ${nu ? `<button class="btn btn-primary" type="button" data-action="unit" data-unit="${nu.id}">${answered ? "続きから" : "はじめる"}：${UNITS.indexOf(nu) + 1}. ${esc(nu.title)}</button>` : `<span class="chip done" style="align-self:center">全問正解</span>`}
+          <button class="btn" type="button" data-action="wrong" ${wrong ? "" : "disabled"}>間違えた問題（${wrong}）</button>
+          <button class="btn" type="button" data-action="review" ${answered ? "" : "disabled"}>おさらい 5問</button>
+        </div>
+        ${answered ? "" : `<p class="muted" style="margin:0;font-size:13px">「おさらい」は、前に解いた問題から間違えたもの・時間がたったものを優先して5問出します。</p>`}
+      </section>
+      <section class="stack">
+        <h2>単元</h2>
+        <ul class="units">${rows}</ul>
+      </section>
+    </div>`;
+  }
+
+  function renderUnit() {
+    const u = UNITS.find((x) => x.id === view.unitId);
+    const no = UNITS.indexOf(u) + 1;
+    const swift = u.swift && u.swift.length ? `<section class="stack"><h2>Swift と比べると</h2>
+      <div class="table-wrap"><table><thead><tr><th>Swift</th><th>TypeScript</th></tr></thead><tbody>
+      ${u.swift.map(([s, t]) => `<tr><td>${md(s)}</td><td>${md(t)}</td></tr>`).join("")}
+      </tbody></table></div></section>` : "";
+    const examples = u.examples.map((ex) => `<section class="stack"><h2>${esc(ex.title)}</h2>${codeBlock(ex.code, { name: ex.multiFile ? "例" : "例.ts", play: !ex.multiFile })}</section>`).join("");
+    app.innerHTML = `<article class="stack-lg">
+      <div class="stack">
+        <div class="qhead"><button class="link" type="button" data-action="home">← 単元一覧</button><button class="link" type="button" data-action="start" data-unit="${u.id}">問題から始める →</button></div>
+        <div class="eyebrow">単元 ${no} / ${UNITS.length} · 約${u.min}分 · ${u.questions.length}問</div>
+        <h1>${esc(u.title)}</h1>
+        <p class="lead" style="margin:0">${md(u.lead)}</p>
+      </div>
+      <section class="stack"><h2>押さえること</h2><ul class="points">${u.points.map((p) => `<li>${md(p)}</li>`).join("")}</ul></section>
+      ${swift}
+      ${examples}
+      <button class="btn btn-primary btn-wide" type="button" data-action="start" data-unit="${u.id}">問題を解く（${u.questions.length}問）</button>
+    </article>`;
+  }
+
+  function startQuiz(mode, ids, unitId) {
+    if (!ids.length) return;
+    go({ name: "quiz", mode, ids, idx: 0, unitId, picked: null, order: orderFor(Q.get(ids[0])), results: {} });
+  }
+  function orderFor(q) {
+    const idx = q.choices.map((_, i) => i);
+    return q.kind === "tf" || q.choices.length < 3 ? idx : shuffle(idx);
+  }
+  const modeLabel = (v) => v.mode === "unit" ? `単元 ${Q.get(v.ids[0]).unitNo}` : v.mode === "wrong" ? "間違えた問題" : "おさらい";
+
+  function evidence(q) {
+    const ev = q.evidence;
+    if (!ev) return "";
+    if (ev.type === "tsc") {
+      if (!ev.diag.length) return `<div class="evidence"><span class="label">tsc（${esc(DATA.meta.versions.ts7)} / ${esc(DATA.meta.versions.ts5)}・strict）の結果</span><span class="clean">エラーなし</span></div>`;
+      return `<div class="evidence"><span class="label">tsc（${esc(DATA.meta.versions.ts7)}・strict）が実際に出したエラー</span>${ev.diag.map((d) =>
+        `<div class="diag"><span class="tscode">TS${d.code}</span><span>${esc(d.file)} ${d.line}行目: ${esc(d.message)}</span></div>`).join("")}</div>`;
+    }
+    if (ev.type === "run") {
+      const body = ev.error ? `<div class="diag"><span class="tscode">停止</span><span>${esc(ev.error)}</span></div>` : `<div class="out-line">${esc(ev.stdout)}</div>`;
+      return `<div class="evidence"><span class="label">Node.js で実行した結果</span>${body}</div>`;
+    }
+    if (ev.type === "types") return `<div class="evidence"><span class="label">確かめ方</span>選択肢の型を1つずつ tsc（${esc(DATA.meta.versions.ts7)} / ${esc(DATA.meta.versions.ts5)}）で照合し、正解だけが一致することを確認済み</div>`;
+    return "";
+  }
+
+  function renderQuiz() {
+    const v = view;
+    const q = Q.get(v.ids[v.idx]);
+    const answered = v.picked !== null;
+    const two = q.kind === "tf";
+    const dots = v.ids.map((id, i) => `<i class="${i === v.idx ? "now" : v.results[id] === true ? "ok" : v.results[id] === false ? "err" : ""}"></i>`).join("");
+    const hits = answered && q.evidence && q.evidence.type === "tsc" ? q.evidence.diag.filter((d) => d.file === "main.ts").map((d) => d.line) : [];
+    const choices = v.order.map((orig, di) => {
+      const text = q.choices[orig];
+      let cls = "", mark = "";
+      if (answered) {
+        if (orig === q.answer) { cls = "is-answer"; mark = "正解"; }
+        else if (orig === v.picked) { cls = "is-wrong"; mark = "×"; }
+      }
+      const label = isCodeChoice(q, text) ? `<span class="mono">${esc(text)}</span>` : md(text);
+      return `<button class="choice ${cls}" type="button" data-action="pick" data-choice="${orig}" ${answered ? "disabled" : ""}>${label}${mark ? `<span class="mark">${mark}</span>` : ""}</button>`;
+    }).join("");
+    const ok = v.picked === q.answer;
+    const last = v.idx === v.ids.length - 1;
+    const fb = answered ? `<section class="feedback" id="feedback">
+        <div class="verdict ${ok ? "ok" : "err"}">${ok ? "正解" : "不正解"}</div>
+        ${ok ? "" : `<div>正解は「${md(q.choices[q.answer])}」</div>`}
+        <div>${md(q.explain)}</div>
+        ${evidence(q)}
+        <button class="btn btn-primary btn-wide" type="button" data-action="next">${last ? "結果を見る" : "次の問題へ"}</button>
+      </section>` : "";
+    app.innerHTML = `<div class="stack-lg">
+      <div class="qhead"><span class="eyebrow">${esc(modeLabel(v))} · ${v.idx + 1} / ${v.ids.length}${v.mode !== "unit" ? ` · ${q.unitNo}. ${esc(q.unit.title)}` : ""}</span><div class="dots" aria-hidden="true">${dots}</div></div>
+      <div class="qtext">${md(q.q)}</div>
+      ${q.code ? codeBlock(q.code, { name: "main.ts", hits, play: !q.multiFile }) : ""}
+      <div class="choices ${two ? "two" : ""}" role="group" aria-label="選択肢">${choices}</div>
+      ${fb}
+      <div><button class="link" type="button" data-action="quit">やめて一覧へ戻る</button></div>
+    </div>`;
+  }
+
+  function renderResult() {
+    const v = view;
+    const ids = v.ids;
+    const okN = ids.filter((id) => v.results[id]).length;
+    const missed = ids.filter((id) => !v.results[id]);
+    const u = v.mode === "unit" ? UNITS.find((x) => x.id === v.unitId) : null;
+    const next = u ? UNITS[UNITS.indexOf(u) + 1] : null;
+    app.innerHTML = `<div class="stack-lg">
+      <div class="stack">
+        <div class="eyebrow">${esc(modeLabel(v))}${u ? ` · ${esc(u.title)}` : ""}</div>
+        <div class="score"><b>${okN}</b><span class="muted">/ ${ids.length} 問 正解</span></div>
+      </div>
+      <ul class="result-list">${ids.map((id) => {
+        const q = Q.get(id);
+        return `<li><span class="r ${v.results[id] ? "ok" : "err"}">${v.results[id] ? "○" : "×"}</span><span>${md(q.q)}<br><span class="muted" style="font-size:13px">${q.unitNo}. ${esc(q.unit.title)}</span></span></li>`;
+      }).join("")}</ul>
+      <div class="actions">
+        ${missed.length ? `<button class="btn btn-primary" type="button" data-action="retry">間違えた ${missed.length} 問をもう一度</button>` : ""}
+        ${next ? `<button class="btn ${missed.length ? "" : "btn-primary"}" type="button" data-action="unit" data-unit="${next.id}">次の単元：${esc(next.title)}</button>` : ""}
+        <button class="btn" type="button" data-action="home">単元一覧へ</button>
+      </div>
+    </div>`;
+  }
+
+  function renderCheat() {
+    const groups = UNITS.filter((u) => u.swift && u.swift.length).map((u) => `<section class="stack">
+      <h3><button class="link" style="font-size:16px;font-weight:700" type="button" data-action="unit" data-unit="${u.id}">${UNITS.indexOf(u) + 1}. ${esc(u.title)}</button></h3>
+      <div class="table-wrap"><table><thead><tr><th>Swift</th><th>TypeScript</th></tr></thead><tbody>
+      ${u.swift.map(([s, t]) => `<tr><td>${md(s)}</td><td>${md(t)}</td></tr>`).join("")}
+      </tbody></table></div></section>`).join("");
+    app.innerHTML = `<div class="stack-lg">
+      <div class="stack"><h1>Swift 対応表</h1><p class="muted" style="margin:0">各単元の「Swift と比べると」をまとめたもの。単元名から本文へ戻れます。</p></div>
+      ${groups}
+    </div>`;
+  }
+
+  function renderFooter() {
+    const m = DATA.meta;
+    document.getElementById("verified").textContent = `問題と例のコードは TypeScript ${m.versions.ts7} と ${m.versions.ts5}（strict）で型チェックし、出力の問題は Node.js で実行して確認（${m.checkedAt}）`;
+    const row = document.getElementById("reset-row");
+    row.innerHTML = view.confirmReset
+      ? `<span>進捗をすべて消しますか？</span><button class="link" type="button" data-action="reset-yes" style="color:var(--err)">消す</button><button class="link" type="button" data-action="reset-no">やめる</button>`
+      : `<button class="link" type="button" data-action="reset" style="color:var(--muted)">進捗をリセット</button>`;
+  }
+
+  function render() {
+    if (view.name === "home") renderHome();
+    else if (view.name === "unit") renderUnit();
+    else if (view.name === "quiz") renderQuiz();
+    else if (view.name === "result") renderResult();
+    else if (view.name === "cheatsheet") renderCheat();
+    document.getElementById("nav-home").setAttribute("aria-current", view.name === "cheatsheet" ? "false" : "page");
+    document.getElementById("nav-cheat").setAttribute("aria-current", view.name === "cheatsheet" ? "page" : "false");
+    renderFooter();
+  }
+
+  // ---------- 操作 ----------
+  document.addEventListener("click", (ev) => {
+    const el = ev.target.closest("[data-action]");
+    if (!el) return;
+    const a = el.dataset.action;
+    if (a === "home") go({ name: "home" });
+    else if (a === "cheatsheet") go({ name: "cheatsheet" });
+    else if (a === "unit") go({ name: "unit", unitId: el.dataset.unit });
+    else if (a === "start") {
+      const u = UNITS.find((x) => x.id === el.dataset.unit);
+      startQuiz("unit", u.questions.map((q) => q.id), u.id);
+    }
+    else if (a === "wrong") startQuiz("wrong", wrongIds());
+    else if (a === "review") startQuiz("review", reviewIds());
+    else if (a === "pick" && view.name === "quiz" && view.picked === null) {
+      const q = Q.get(view.ids[view.idx]);
+      const picked = Number(el.dataset.choice);
+      view.picked = picked;
+      view.results[q.id] = picked === q.answer;
+      record(q.id, picked === q.answer);
+      render();
+      const fb = document.getElementById("feedback");
+      if (fb) fb.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "nearest" });
+    }
+    else if (a === "next" && view.name === "quiz") {
+      if (view.idx + 1 >= view.ids.length) go({ name: "result", mode: view.mode, ids: view.ids, unitId: view.unitId, results: view.results });
+      else {
+        view.idx++;
+        view.picked = null;
+        view.order = orderFor(Q.get(view.ids[view.idx]));
+        render();
+        window.scrollTo(0, 0);
+      }
+    }
+    else if (a === "retry" && view.name === "result") {
+      startQuiz(view.mode === "unit" ? "wrong" : view.mode, view.ids.filter((id) => !view.results[id]), view.unitId);
+    }
+    else if (a === "quit") go({ name: "home" });
+    else if (a === "reset") { view.confirmReset = true; renderFooter(); }
+    else if (a === "reset-no") { view.confirmReset = false; renderFooter(); }
+    else if (a === "reset-yes") {
+      progress = { answers: {}, resetAt: Date.now() };
+      schedulePush();
+      go({ name: "home" });
+    }
+  });
+
+  render();
+})();
+</script>
+
+</body>
+</html>

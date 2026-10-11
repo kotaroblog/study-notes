@@ -1,0 +1,352 @@
+{
+  "versions": {
+    "ts7": "7.0.2",
+    "ts5": "5.9.3"
+  },
+  "checkedAt": "2026-10-11",
+  "questions": {
+    "u1-2": {
+      "diag": [
+        {
+          "file": "main.ts",
+          "line": 2,
+          "code": 2322,
+          "message": "Type 'string' is not assignable to type 'number'."
+        }
+      ]
+    },
+    "u1-3": {
+      "diag": [
+        {
+          "file": "main.ts",
+          "line": 4,
+          "code": 2345,
+          "message": "Argument of type 'string' is not assignable to parameter of type 'number'."
+        }
+      ]
+    },
+    "u1-4": {
+      "diag": []
+    },
+    "u2-1": {
+      "stdout": "20"
+    },
+    "u2-2": {
+      "stdout": "3 5"
+    },
+    "u2-3": {
+      "stdout": "[10,30,50]"
+    },
+    "u2-4": {
+      "stdout": "10 0"
+    },
+    "u2-5": {
+      "stdout": "30 31"
+    },
+    "u3-4": {
+      "diag": []
+    },
+    "u3-5": {
+      "diag": [
+        {
+          "file": "main.ts",
+          "line": 1,
+          "code": 7006,
+          "message": "Parameter 'n' implicitly has an 'any' type."
+        }
+      ]
+    },
+    "u3-6": {
+      "diag": [
+        {
+          "file": "main.ts",
+          "line": 1,
+          "code": 2322,
+          "message": "Type '[string, number, boolean]' is not assignable to type '[string, number]'.\nSource has 3 element(s) but target allows only 2."
+        }
+      ]
+    },
+    "u4-1": {
+      "diag": [
+        {
+          "file": "main.ts",
+          "line": 2,
+          "code": 2741,
+          "message": "Property 'name' is missing in type '{ id: number; }' but required in type 'User'."
+        }
+      ]
+    },
+    "u4-2": {
+      "diag": []
+    },
+    "u4-3": {
+      "diag": [
+        {
+          "file": "main.ts",
+          "line": 3,
+          "code": 18048,
+          "message": "'u.email' is possibly 'undefined'."
+        }
+      ]
+    },
+    "u4-4": {
+      "diag": [
+        {
+          "file": "main.ts",
+          "line": 3,
+          "code": 2540,
+          "message": "Cannot assign to 'id' because it is a read-only property."
+        }
+      ]
+    },
+    "u4-5": {
+      "diag": [
+        {
+          "file": "main.ts",
+          "line": 2,
+          "code": 2353,
+          "message": "Object literal may only specify known properties, and 'age' does not exist in type 'User'."
+        }
+      ]
+    },
+    "u5-1": {
+      "diag": [
+        {
+          "file": "main.ts",
+          "line": 2,
+          "code": 2322,
+          "message": "Type 'number' is not assignable to type 'string'."
+        }
+      ]
+    },
+    "u5-2": {
+      "diag": [
+        {
+          "file": "main.ts",
+          "line": 4,
+          "code": 2554,
+          "message": "Expected 2 arguments, but got 1."
+        }
+      ]
+    },
+    "u5-3": {
+      "diag": [
+        {
+          "file": "main.ts",
+          "line": 2,
+          "code": 18048,
+          "message": "'rate' is possibly 'undefined'."
+        }
+      ]
+    },
+    "u6-1": {
+      "diag": []
+    },
+    "u6-2": {
+      "diag": [
+        {
+          "file": "main.ts",
+          "line": 2,
+          "code": 2339,
+          "message": "Property 'toUpperCase' does not exist on type 'string | number'.\nProperty 'toUpperCase' does not exist on type 'number'."
+        }
+      ]
+    },
+    "u6-3": {
+      "diag": [
+        {
+          "file": "main.ts",
+          "line": 2,
+          "code": 2322,
+          "message": "Type '\"deleted\"' is not assignable to type 'Status'."
+        }
+      ]
+    },
+    "u6-5": {
+      "diag": []
+    },
+    "u7-1": {
+      "diag": [
+        {
+          "file": "main.ts",
+          "line": 1,
+          "code": 2322,
+          "message": "Type 'null' is not assignable to type 'string'."
+        }
+      ]
+    },
+    "u7-2": {
+      "diag": [
+        {
+          "file": "main.ts",
+          "line": 3,
+          "code": 18048,
+          "message": "'found' is possibly 'undefined'."
+        }
+      ]
+    },
+    "u7-4": {
+      "stdout": "[\"\",\"ゲスト\"]"
+    },
+    "u7-5": {
+      "stdout": "undefined"
+    },
+    "u8-1": {
+      "diag": [
+        {
+          "file": "main.ts",
+          "line": 6,
+          "code": 2339,
+          "message": "Property 'value' does not exist on type 'Result'.\nProperty 'value' does not exist on type '{ kind: \"error\"; message: string; }'."
+        }
+      ]
+    },
+    "u8-2": {
+      "diag": []
+    },
+    "u8-3": {
+      "diag": [
+        {
+          "file": "main.ts",
+          "line": 13,
+          "code": 2322,
+          "message": "Type '{ kind: \"triangle\"; base: number; height: number; }' is not assignable to type 'never'."
+        }
+      ]
+    },
+    "u9-1": {
+      "diag": []
+    },
+    "u9-2": {
+      "diag": []
+    },
+    "u9-3": {
+      "diag": [
+        {
+          "file": "main.ts",
+          "line": 2,
+          "code": 2353,
+          "message": "Object literal may only specify known properties, and 'z' does not exist in type 'Point'."
+        }
+      ]
+    },
+    "u9-4": {
+      "diag": []
+    },
+    "u9-5": {
+      "diag": [
+        {
+          "file": "main.ts",
+          "line": 3,
+          "code": 2741,
+          "message": "Property 'y' is missing in type '{ x: number; }' but required in type 'Point'."
+        }
+      ]
+    },
+    "u10-2": {
+      "diag": [
+        {
+          "file": "main.ts",
+          "line": 4,
+          "code": 2322,
+          "message": "Type 'number' is not assignable to type 'string'."
+        },
+        {
+          "file": "main.ts",
+          "line": 4,
+          "code": 2322,
+          "message": "Type 'number' is not assignable to type 'string'."
+        }
+      ]
+    },
+    "u10-3": {
+      "diag": [
+        {
+          "file": "main.ts",
+          "line": 4,
+          "code": 2353,
+          "message": "Object literal may only specify known properties, and 'name' does not exist in type '{ id: number; }'."
+        }
+      ]
+    },
+    "u11-1": {
+      "diag": []
+    },
+    "u11-2": {
+      "diag": [
+        {
+          "file": "main.ts",
+          "line": 5,
+          "code": 2353,
+          "message": "Object literal may only specify known properties, and 'email' does not exist in type 'Pick<User, \"id\" | \"name\">'."
+        }
+      ]
+    },
+    "u11-6": {
+      "diag": [
+        {
+          "file": "main.ts",
+          "line": 3,
+          "code": 2540,
+          "message": "Cannot assign to 'name' because it is a read-only property."
+        }
+      ]
+    },
+    "u12-1": {
+      "diag": [
+        {
+          "file": "main.ts",
+          "line": 2,
+          "code": 18046,
+          "message": "'v' is of type 'unknown'."
+        }
+      ]
+    },
+    "u12-2": {
+      "stdout": "",
+      "error": "TypeError: v.toUpperCase is not a function"
+    },
+    "u12-3": {
+      "stdout": "string"
+    },
+    "u12-4": {
+      "diag": [
+        {
+          "file": "main.ts",
+          "line": 1,
+          "code": 2352,
+          "message": "Conversion of type 'string' to type 'number' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first."
+        }
+      ]
+    },
+    "u13-2": {
+      "diag": [
+        {
+          "file": "main.ts",
+          "line": 6,
+          "code": 2365,
+          "message": "Operator '+' cannot be applied to types 'Promise<number>' and '1'."
+        }
+      ]
+    },
+    "u13-3": {
+      "diag": [
+        {
+          "file": "main.ts",
+          "line": 5,
+          "code": 18046,
+          "message": "'e' is of type 'unknown'."
+        }
+      ]
+    },
+    "u13-4": {
+      "stdout": "A\nD\nC\nB"
+    },
+    "u14-2": {
+      "stdout": "1 Blue"
+    },
+    "u14-3": {
+      "diag": []
+    }
+  }
+}

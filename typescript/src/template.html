@@ -1,0 +1,660 @@
+<title>TypeScript 隙間ドリル</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=JetBrains+Mono:wght@400;600&family=Zen+Kaku+Gothic+New:wght@700&display=swap">
+<style>
+/* Layout: 1カラム（最大 680px）。上部に固定の帳票バー、本文はカード化しすぎず、コードと診断だけを面で区切る */
+:root {
+  --bg: #f4f5f8;
+  --surface: #ffffff;
+  --ink: #1b2130;
+  --muted: #5a6475;
+  --line: #dce0e8;
+  --accent: #3f4cc4;
+  --accent-ink: #ffffff;
+  --accent-soft: #e7e9fb;
+  --ok: #17784f;
+  --ok-soft: #e1f3ea;
+  --err: #b93328;
+  --err-soft: #fbe6e3;
+  --code-bg: #eef0f5;
+  --code-ink: #1f2533;
+  --gutter: #9aa2b1;
+  --tok-keyword: #6a2fb8;
+  --tok-string: #1d7a43;
+  --tok-number: #b3530f;
+  --tok-comment: #7b8494;
+  --tok-type: #2557b0;
+  --tok-func: #8a3a00;
+  --font-display: "Zen Kaku Gothic New", "Hiragino Sans", "Noto Sans JP", sans-serif;
+  --font-body: "BIZ UDPGothic", "Hiragino Sans", "Noto Sans JP", sans-serif;
+  --font-code: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, "Hiragino Sans", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12151b; --surface: #1a1e26; --ink: #e5e8ee; --muted: #9ba4b3; --line: #2b313c;
+    --accent: #8f9bff; --accent-ink: #12151b; --accent-soft: #252a45;
+    --ok: #4cc38a; --ok-soft: #173326; --err: #ff8073; --err-soft: #3a1d1b;
+    --code-bg: #0f1217; --code-ink: #dfe3ea; --gutter: #5d6574;
+    --tok-keyword: #c79bff; --tok-string: #8fd6a4; --tok-number: #f3a96b; --tok-comment: #7d8697; --tok-type: #84b4ff; --tok-func: #f0c27a;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12151b; --surface: #1a1e26; --ink: #e5e8ee; --muted: #9ba4b3; --line: #2b313c;
+  --accent: #8f9bff; --accent-ink: #12151b; --accent-soft: #252a45;
+  --ok: #4cc38a; --ok-soft: #173326; --err: #ff8073; --err-soft: #3a1d1b;
+  --code-bg: #0f1217; --code-ink: #dfe3ea; --gutter: #5d6574;
+  --tok-keyword: #c79bff; --tok-string: #8fd6a4; --tok-number: #f3a96b; --tok-comment: #7d8697; --tok-type: #84b4ff; --tok-func: #f0c27a;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.75;
+}
+a { color: var(--accent); }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+code { font-family: var(--font-code); font-size: 0.88em; background: var(--code-bg); padding: 0.08em 0.35em; border-radius: 4px; overflow-wrap: anywhere; }
+
+.bar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+}
+.bar-inner {
+  max-width: 680px; margin: 0 auto; padding: 10px 16px;
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.brand {
+  font-family: var(--font-display); font-weight: 700; font-size: 17px; letter-spacing: 0.02em;
+  background: none; border: 0; padding: 0; cursor: pointer; display: flex; align-items: baseline; gap: 8px;
+}
+.brand .ts { font-family: var(--font-code); font-size: 12px; font-weight: 600; color: var(--accent-ink); background: var(--accent); padding: 1px 6px; border-radius: 4px; letter-spacing: 0; }
+.nav { margin-left: auto; display: flex; gap: 4px; }
+.nav button {
+  border: 0; background: none; padding: 6px 10px; border-radius: 8px; cursor: pointer; color: var(--muted); font-size: 14px; min-height: 36px;
+}
+.nav button[aria-current="page"] { color: var(--ink); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); }
+
+main { max-width: 680px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 56px; }
+h1, h2, h3 { font-family: var(--font-display); font-weight: 700; text-wrap: balance; line-height: 1.4; margin: 0; }
+h1 { font-size: 26px; }
+h2 { font-size: 19px; }
+h3 { font-size: 16px; }
+.eyebrow { font-size: 12px; letter-spacing: 0.08em; color: var(--muted); font-family: var(--font-code); }
+.muted { color: var(--muted); }
+.stack { display: flex; flex-direction: column; gap: 14px; }
+.stack-lg { display: flex; flex-direction: column; gap: 28px; }
+
+/* 進捗のまとめ */
+.summary {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.score { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.score b { font-family: var(--font-code); font-size: 34px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1; }
+.meter { height: 8px; border-radius: 99px; background: var(--line); overflow: hidden; display: flex; }
+.meter i { display: block; height: 100%; }
+.meter .m-ok { background: var(--ok); }
+.meter .m-err { background: var(--err); }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  min-height: 46px; padding: 10px 16px; border-radius: 10px; cursor: pointer;
+  border: 1px solid var(--line); background: var(--surface); font-weight: 700; font-size: 15px; text-align: center;
+}
+.btn-primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn:disabled { opacity: 0.5; cursor: default; }
+.btn-wide { width: 100%; }
+.link { background: none; border: 0; padding: 0; color: var(--accent); cursor: pointer; font-size: 14px; min-height: 32px; }
+
+/* 単元の一覧 */
+.units { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.units li { border-bottom: 1px solid var(--line); }
+.unit-row {
+  width: 100%; text-align: left; background: none; border: 0; cursor: pointer;
+  display: grid; grid-template-columns: 34px 1fr auto; gap: 4px 12px; align-items: center; padding: 14px 2px;
+}
+.unit-row .no { font-family: var(--font-code); font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.unit-row .t { font-weight: 700; min-width: 0; }
+.unit-row .meta { font-size: 13px; color: var(--muted); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.unit-row .cells { grid-column: 2 / 4; display: flex; gap: 3px; }
+.cell { width: 14px; height: 6px; border-radius: 2px; background: var(--line); }
+.cell.ok { background: var(--ok); }
+.cell.err { background: var(--err); }
+.chip { font-size: 12px; padding: 1px 8px; border-radius: 99px; font-weight: 700; }
+.chip.done { background: var(--ok-soft); color: var(--ok); }
+
+/* 単元の本文 */
+.lead { font-size: 17px; }
+.points { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 8px; }
+.points li::marker { color: var(--accent); }
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--line); min-width: 9em; }
+tr:last-child td { border-bottom: 0; }
+th { font-size: 12px; color: var(--muted); font-weight: 700; letter-spacing: 0.06em; background: var(--bg); }
+
+/* コード */
+.code { border-radius: 12px; background: var(--code-bg); overflow: hidden; }
+.code-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 12px 0; font-size: 12px; color: var(--muted); font-family: var(--font-code); }
+.code-head a { font-family: var(--font-body); font-size: 12px; text-decoration: none; padding: 4px 0; }
+.code-body { display: grid; grid-template-columns: auto 1fr; }
+.gutter {
+  margin: 0; padding: 10px 8px 12px 12px; text-align: right; color: var(--gutter);
+  font-family: var(--font-code); font-size: 13px; line-height: 1.6; user-select: none;
+}
+.gutter span { display: block; }
+.gutter .hit { color: var(--err); font-weight: 600; }
+.code pre {
+  margin: 0; padding: 10px 14px 12px 6px; overflow-x: auto; min-width: 0;
+  font-family: var(--font-code); font-size: 13px; line-height: 1.6; color: var(--code-ink); tab-size: 2;
+}
+.code pre code { background: none; padding: 0; font-size: inherit; overflow-wrap: normal; }
+.token.keyword, .token.boolean { color: var(--tok-keyword); }
+.token.string, .token.template-string { color: var(--tok-string); }
+.token.number { color: var(--tok-number); }
+.token.comment { color: var(--tok-comment); font-style: italic; }
+.token.class-name, .token.builtin { color: var(--tok-type); }
+.token.function { color: var(--tok-func); }
+.token.punctuation, .token.operator { color: var(--muted); }
+
+/* 問題 */
+.qhead { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.dots { display: flex; gap: 5px; }
+.dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--line); display: block; }
+.dots i.now { background: var(--accent); }
+.dots i.ok { background: var(--ok); }
+.dots i.err { background: var(--err); }
+.qtext { font-size: 18px; font-weight: 700; line-height: 1.6; }
+.choices { display: grid; gap: 8px; }
+.choices.two { grid-template-columns: 1fr 1fr; }
+.choice {
+  min-height: 52px; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface);
+  text-align: left; cursor: pointer; display: flex; align-items: center; gap: 10px; line-height: 1.5; min-width: 0;
+}
+.choices.two .choice { justify-content: center; text-align: center; font-weight: 700; }
+.choice .mono { font-family: var(--font-code); font-size: 14px; overflow-wrap: anywhere; }
+.choice[disabled] { cursor: default; }
+.choice.is-answer { border-color: var(--ok); background: var(--ok-soft); }
+.choice.is-wrong { border-color: var(--err); background: var(--err-soft); }
+.choice .mark { margin-left: auto; font-weight: 700; flex: none; }
+.choice.is-answer .mark { color: var(--ok); }
+.choice.is-wrong .mark { color: var(--err); }
+
+.feedback { border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 10px; background: var(--surface); border: 1px solid var(--line); }
+.verdict { font-family: var(--font-display); font-size: 18px; font-weight: 700; }
+.verdict.ok { color: var(--ok); }
+.verdict.err { color: var(--err); }
+.evidence { border-radius: 10px; background: var(--code-bg); padding: 10px 12px; font-family: var(--font-code); font-size: 12.5px; line-height: 1.6; overflow-x: auto; }
+.evidence .label { font-family: var(--font-body); font-size: 12px; color: var(--muted); display: block; margin-bottom: 4px; }
+.diag { display: flex; gap: 8px; align-items: baseline; white-space: pre-wrap; overflow-wrap: anywhere; }
+.diag + .diag { margin-top: 6px; }
+.tscode { flex: none; color: var(--err); font-weight: 600; }
+.clean { color: var(--ok); font-weight: 600; }
+.out-line { white-space: pre; }
+
+.result-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.result-list li { display: flex; gap: 10px; padding: 10px 2px; border-bottom: 1px solid var(--line); align-items: baseline; }
+.result-list .r { font-weight: 700; flex: none; width: 1.2em; }
+.result-list .r.ok { color: var(--ok); }
+.result-list .r.err { color: var(--err); }
+
+footer { max-width: 680px; margin: 0 auto; padding-inline: 16px; padding-block: 8px 40px; font-size: 13px; color: var(--muted); display: flex; flex-direction: column; gap: 8px; }
+.sync::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--gutter); margin-right: 6px; vertical-align: 1px; }
+.sync[data-state="cloud"]::before { background: var(--ok); }
+.sync[data-state="saving"]::before { background: var(--accent); }
+.sync[data-state="error"]::before { background: var(--err); }
+.reset-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+@media (max-width: 380px) {
+  .choices.two { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { scroll-behavior: auto !important; }
+}
+</style>
+
+<header class="bar">
+  <div class="bar-inner">
+    <button class="brand" data-action="home" type="button"><span class="ts">TS</span>隙間ドリル</button>
+    <nav class="nav" aria-label="表示の切り替え">
+      <button type="button" data-action="home" id="nav-home">単元</button>
+      <button type="button" data-action="cheatsheet" id="nav-cheat">Swift 対応表</button>
+    </nav>
+  </div>
+</header>
+
+<main id="app" aria-live="polite"></main>
+
+<footer>
+  <div class="sync" id="sync" data-state="local">進捗はこの端末のブラウザに保存しています</div>
+  <div id="verified"></div>
+  <div class="reset-row" id="reset-row"></div>
+  <!--__BACKLINK__-->
+</footer>
+
+<script id="drill-data" type="application/json">/*__DATA__*/</script>
+<script>window.Prism = { manual: true };</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
+<script>
+(() => {
+  const DATA = JSON.parse(document.getElementById("drill-data").textContent);
+  const UNITS = DATA.units;
+  const Q = new Map();
+  UNITS.forEach((u, ui) => u.questions.forEach((q, qi) => Q.set(q.id, { ...q, unit: u, unitNo: ui + 1, qNo: qi + 1 })));
+  const TOTAL = Q.size;
+  const STORE_KEY = "ts-drill-progress-v1";
+  const app = document.getElementById("app");
+
+  // ---------- 表示の部品 ----------
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const md = (s) => esc(s).replace(/`([^`]+)`/g, "<code>$1</code>");
+  const hl = (code) => {
+    try {
+      if (window.Prism && Prism.languages && Prism.languages.typescript) return Prism.highlight(code, Prism.languages.typescript, "typescript");
+    } catch (e) {}
+    return esc(code);
+  };
+  const playground = (code) => {
+    try {
+      if (window.LZString) return "https://www.typescriptlang.org/play/?#code/" + LZString.compressToEncodedURIComponent(code);
+    } catch (e) {}
+    return null;
+  };
+  function codeBlock(code, { name = "main.ts", hits = [], play = true } = {}) {
+    const lines = code.split("\n");
+    const gutter = lines.map((_, i) => `<span class="${hits.includes(i + 1) ? "hit" : ""}">${i + 1}</span>`).join("");
+    const url = play ? playground(code) : null;
+    return `<div class="code">
+      <div class="code-head"><span>${esc(name)}</span>${url ? `<a href="${esc(url)}" target="_blank" rel="noopener">Playground で試す ↗</a>` : ""}</div>
+      <div class="code-body"><div class="gutter" aria-hidden="true">${gutter}</div><pre><code>${hl(code)}</code></pre></div>
+    </div>`;
+  }
+  const JA = /[ぁ-んァ-ヶ一-龠]/;
+  const isCodeChoice = (q, text) => q.kind === "type" || (q.kind === "out" && !JA.test(text));
+
+  // ---------- 進捗 ----------
+  function emptyProgress() { return { answers: {}, resetAt: 0 }; }
+  function clean(p) {
+    const out = emptyProgress();
+    if (!p || typeof p !== "object") return out;
+    out.resetAt = typeof p.resetAt === "number" ? p.resetAt : 0;
+    const a = p.answers && typeof p.answers === "object" ? p.answers : {};
+    for (const [id, e] of Object.entries(a)) {
+      if (!Q.has(id) || !e || typeof e.ok !== "boolean" || typeof e.at !== "number") continue;
+      if (e.at < out.resetAt) continue;
+      out.answers[id] = { ok: e.ok, at: e.at, n: typeof e.n === "number" ? e.n : 1 };
+    }
+    return out;
+  }
+  function merge(a, b) {
+    const resetAt = Math.max(a.resetAt || 0, b.resetAt || 0);
+    const answers = {};
+    for (const src of [a.answers || {}, b.answers || {}]) {
+      for (const [id, e] of Object.entries(src)) {
+        if (e.at < resetAt) continue;
+        const cur = answers[id];
+        if (!cur || e.at > cur.at) answers[id] = { ...e, n: Math.max(e.n || 1, cur ? cur.n : 0) };
+      }
+    }
+    return { answers, resetAt };
+  }
+  function loadLocal() {
+    try { return clean(JSON.parse(localStorage.getItem(STORE_KEY) || "null")); } catch (e) { return emptyProgress(); }
+  }
+  function saveLocal() {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(progress)); } catch (e) {}
+  }
+  let progress = loadLocal();
+
+  const sync = { ref: null, timer: null, writing: false, dirty: false };
+  const syncEl = document.getElementById("sync");
+  function setSync(state) {
+    syncEl.dataset.state = state;
+    syncEl.textContent = {
+      local: "進捗はこの端末のブラウザに保存しています",
+      cloud: "進捗はアカウントに保存しています（スマホと PC で共通）",
+      saving: "進捗を保存しています…",
+      error: "アカウントへの保存に失敗しました。この端末には保存しています",
+    }[state];
+  }
+  async function pull() {
+    if (!sync.ref) return;
+    const snap = await sync.ref.get();
+    if (!snap.exists) return;
+    const merged = merge(progress, clean(snap.data()));
+    if (JSON.stringify(merged) !== JSON.stringify(progress)) {
+      progress = merged;
+      saveLocal();
+      if (view.name !== "quiz") render();
+    }
+  }
+  function schedulePush() {
+    saveLocal();
+    if (!sync.ref) return;
+    sync.dirty = true;
+    setSync("saving");
+    clearTimeout(sync.timer);
+    sync.timer = setTimeout(push, 1500);
+  }
+  async function push() {
+    if (!sync.ref || !sync.dirty) return;
+    if (sync.writing) { sync.timer = setTimeout(push, 800); return; }
+    sync.writing = true;
+    sync.dirty = false;
+    try {
+      const snap = await sync.ref.get();
+      if (snap.exists) progress = merge(progress, clean(snap.data()));
+      saveLocal();
+      await sync.ref.set({ v: 1, answers: progress.answers, resetAt: progress.resetAt, updatedAt: Date.now() });
+      setSync(sync.dirty ? "saving" : "cloud");
+    } catch (e) {
+      sync.dirty = true;
+      setSync("error");
+    } finally {
+      sync.writing = false;
+    }
+  }
+  (async () => {
+    try {
+      if (!window.claude || !window.claude.use) return;
+      const [db, user] = await Promise.all([window.claude.use("db"), window.claude.use("user")]);
+      const uid = user ? await user.id() : null;
+      if (!db || !uid) return;
+      sync.ref = db.doc("data/users/" + uid + "/progress");
+      await pull();
+      setSync("cloud");
+      if (Object.keys(progress.answers).length) { sync.dirty = true; push(); }
+    } catch (e) {
+      sync.ref = null;
+      setSync("local");
+    }
+  })();
+  document.addEventListener("visibilitychange", () => {
+    if (!sync.ref) return;
+    if (document.visibilityState === "hidden" && sync.dirty) { clearTimeout(sync.timer); push(); }
+    if (document.visibilityState === "visible") pull().catch(() => {});
+  });
+
+  function record(id, ok) {
+    const prev = progress.answers[id];
+    progress.answers[id] = { ok, at: Date.now(), n: (prev ? prev.n : 0) + 1 };
+    schedulePush();
+  }
+  const stateOf = (id) => {
+    const e = progress.answers[id];
+    return e ? (e.ok ? "ok" : "err") : "none";
+  };
+  function counts(ids) {
+    let ok = 0, err = 0;
+    for (const id of ids) { const s = stateOf(id); if (s === "ok") ok++; else if (s === "err") err++; }
+    return { ok, err, none: ids.length - ok - err };
+  }
+  const allIds = () => [...Q.keys()];
+  const wrongIds = () => allIds().filter((id) => stateOf(id) === "err");
+  function reviewIds() {
+    const answered = allIds().filter((id) => progress.answers[id]);
+    answered.sort((a, b) => {
+      const ea = progress.answers[a], eb = progress.answers[b];
+      if (ea.ok !== eb.ok) return ea.ok ? 1 : -1;
+      return ea.at - eb.at;
+    });
+    return shuffle(answered.slice(0, 8)).slice(0, 5);
+  }
+  function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+    return a;
+  }
+  function nextUnit() {
+    return UNITS.find((u) => u.questions.some((q) => stateOf(q.id) === "none"))
+      || UNITS.find((u) => u.questions.some((q) => stateOf(q.id) === "err"));
+  }
+
+  // ---------- 画面 ----------
+  let view = { name: "home" };
+  function go(next) {
+    view = next;
+    render();
+    window.scrollTo(0, 0);
+  }
+
+  function renderHome() {
+    const c = counts(allIds());
+    const nu = nextUnit();
+    const wrong = wrongIds().length;
+    const answered = TOTAL - c.none;
+    const rows = UNITS.map((u, i) => {
+      const ids = u.questions.map((q) => q.id);
+      const uc = counts(ids);
+      const done = uc.ok === ids.length;
+      const meta = done ? `<span class="chip done">完了</span>` : uc.none === ids.length ? `約${u.min}分` : `${uc.ok}/${ids.length} 正解`;
+      const cells = ids.map((id) => `<i class="cell ${stateOf(id) === "none" ? "" : stateOf(id)}"></i>`).join("");
+      return `<li><button class="unit-row" type="button" data-action="unit" data-unit="${u.id}">
+        <span class="no">${String(i + 1).padStart(2, "0")}</span><span class="t">${esc(u.title)}</span><span class="meta">${meta}</span>
+        <span class="cells" aria-hidden="true">${cells}</span></button></li>`;
+    }).join("");
+    app.innerHTML = `<div class="stack-lg">
+      <div class="stack">
+        <h1>TypeScript 隙間ドリル</h1>
+        <p class="muted" style="margin:0">JavaScript と Swift の知識から TypeScript へ。1単元 5〜9分、全${UNITS.length}単元・${TOTAL}問。問題のコードはすべて実際のコンパイラで確かめています。</p>
+      </div>
+      <section class="summary" aria-label="進み具合">
+        <div class="score"><b>${c.ok}</b><span class="muted">/ ${TOTAL} 問 正解</span>${answered ? `<span class="muted" style="margin-left:auto;font-size:13px">解いた ${answered}・間違い ${c.err}</span>` : ""}</div>
+        <div class="meter" aria-hidden="true"><i class="m-ok" style="width:${(c.ok / TOTAL) * 100}%"></i><i class="m-err" style="width:${(c.err / TOTAL) * 100}%"></i></div>
+        <div class="actions">
+          ${nu ? `<button class="btn btn-primary" type="button" data-action="unit" data-unit="${nu.id}">${answered ? "続きから" : "はじめる"}：${UNITS.indexOf(nu) + 1}. ${esc(nu.title)}</button>` : `<span class="chip done" style="align-self:center">全問正解</span>`}
+          <button class="btn" type="button" data-action="wrong" ${wrong ? "" : "disabled"}>間違えた問題（${wrong}）</button>
+          <button class="btn" type="button" data-action="review" ${answered ? "" : "disabled"}>おさらい 5問</button>
+        </div>
+        ${answered ? "" : `<p class="muted" style="margin:0;font-size:13px">「おさらい」は、前に解いた問題から間違えたもの・時間がたったものを優先して5問出します。</p>`}
+      </section>
+      <section class="stack">
+        <h2>単元</h2>
+        <ul class="units">${rows}</ul>
+      </section>
+    </div>`;
+  }
+
+  function renderUnit() {
+    const u = UNITS.find((x) => x.id === view.unitId);
+    const no = UNITS.indexOf(u) + 1;
+    const swift = u.swift && u.swift.length ? `<section class="stack"><h2>Swift と比べると</h2>
+      <div class="table-wrap"><table><thead><tr><th>Swift</th><th>TypeScript</th></tr></thead><tbody>
+      ${u.swift.map(([s, t]) => `<tr><td>${md(s)}</td><td>${md(t)}</td></tr>`).join("")}
+      </tbody></table></div></section>` : "";
+    const examples = u.examples.map((ex) => `<section class="stack"><h2>${esc(ex.title)}</h2>${codeBlock(ex.code, { name: ex.multiFile ? "例" : "例.ts", play: !ex.multiFile })}</section>`).join("");
+    app.innerHTML = `<article class="stack-lg">
+      <div class="stack">
+        <div class="qhead"><button class="link" type="button" data-action="home">← 単元一覧</button><button class="link" type="button" data-action="start" data-unit="${u.id}">問題から始める →</button></div>
+        <div class="eyebrow">単元 ${no} / ${UNITS.length} · 約${u.min}分 · ${u.questions.length}問</div>
+        <h1>${esc(u.title)}</h1>
+        <p class="lead" style="margin:0">${md(u.lead)}</p>
+      </div>
+      <section class="stack"><h2>押さえること</h2><ul class="points">${u.points.map((p) => `<li>${md(p)}</li>`).join("")}</ul></section>
+      ${swift}
+      ${examples}
+      <button class="btn btn-primary btn-wide" type="button" data-action="start" data-unit="${u.id}">問題を解く（${u.questions.length}問）</button>
+    </article>`;
+  }
+
+  function startQuiz(mode, ids, unitId) {
+    if (!ids.length) return;
+    go({ name: "quiz", mode, ids, idx: 0, unitId, picked: null, order: orderFor(Q.get(ids[0])), results: {} });
+  }
+  function orderFor(q) {
+    const idx = q.choices.map((_, i) => i);
+    return q.kind === "tf" || q.choices.length < 3 ? idx : shuffle(idx);
+  }
+  const modeLabel = (v) => v.mode === "unit" ? `単元 ${Q.get(v.ids[0]).unitNo}` : v.mode === "wrong" ? "間違えた問題" : "おさらい";
+
+  function evidence(q) {
+    const ev = q.evidence;
+    if (!ev) return "";
+    if (ev.type === "tsc") {
+      if (!ev.diag.length) return `<div class="evidence"><span class="label">tsc（${esc(DATA.meta.versions.ts7)} / ${esc(DATA.meta.versions.ts5)}・strict）の結果</span><span class="clean">エラーなし</span></div>`;
+      return `<div class="evidence"><span class="label">tsc（${esc(DATA.meta.versions.ts7)}・strict）が実際に出したエラー</span>${ev.diag.map((d) =>
+        `<div class="diag"><span class="tscode">TS${d.code}</span><span>${esc(d.file)} ${d.line}行目: ${esc(d.message)}</span></div>`).join("")}</div>`;
+    }
+    if (ev.type === "run") {
+      const body = ev.error ? `<div class="diag"><span class="tscode">停止</span><span>${esc(ev.error)}</span></div>` : `<div class="out-line">${esc(ev.stdout)}</div>`;
+      return `<div class="evidence"><span class="label">Node.js で実行した結果</span>${body}</div>`;
+    }
+    if (ev.type === "types") return `<div class="evidence"><span class="label">確かめ方</span>選択肢の型を1つずつ tsc（${esc(DATA.meta.versions.ts7)} / ${esc(DATA.meta.versions.ts5)}）で照合し、正解だけが一致することを確認済み</div>`;
+    return "";
+  }
+
+  function renderQuiz() {
+    const v = view;
+    const q = Q.get(v.ids[v.idx]);
+    const answered = v.picked !== null;
+    const two = q.kind === "tf";
+    const dots = v.ids.map((id, i) => `<i class="${i === v.idx ? "now" : v.results[id] === true ? "ok" : v.results[id] === false ? "err" : ""}"></i>`).join("");
+    const hits = answered && q.evidence && q.evidence.type === "tsc" ? q.evidence.diag.filter((d) => d.file === "main.ts").map((d) => d.line) : [];
+    const choices = v.order.map((orig, di) => {
+      const text = q.choices[orig];
+      let cls = "", mark = "";
+      if (answered) {
+        if (orig === q.answer) { cls = "is-answer"; mark = "正解"; }
+        else if (orig === v.picked) { cls = "is-wrong"; mark = "×"; }
+      }
+      const label = isCodeChoice(q, text) ? `<span class="mono">${esc(text)}</span>` : md(text);
+      return `<button class="choice ${cls}" type="button" data-action="pick" data-choice="${orig}" ${answered ? "disabled" : ""}>${label}${mark ? `<span class="mark">${mark}</span>` : ""}</button>`;
+    }).join("");
+    const ok = v.picked === q.answer;
+    const last = v.idx === v.ids.length - 1;
+    const fb = answered ? `<section class="feedback" id="feedback">
+        <div class="verdict ${ok ? "ok" : "err"}">${ok ? "正解" : "不正解"}</div>
+        ${ok ? "" : `<div>正解は「${md(q.choices[q.answer])}」</div>`}
+        <div>${md(q.explain)}</div>
+        ${evidence(q)}
+        <button class="btn btn-primary btn-wide" type="button" data-action="next">${last ? "結果を見る" : "次の問題へ"}</button>
+      </section>` : "";
+    app.innerHTML = `<div class="stack-lg">
+      <div class="qhead"><span class="eyebrow">${esc(modeLabel(v))} · ${v.idx + 1} / ${v.ids.length}${v.mode !== "unit" ? ` · ${q.unitNo}. ${esc(q.unit.title)}` : ""}</span><div class="dots" aria-hidden="true">${dots}</div></div>
+      <div class="qtext">${md(q.q)}</div>
+      ${q.code ? codeBlock(q.code, { name: "main.ts", hits, play: !q.multiFile }) : ""}
+      <div class="choices ${two ? "two" : ""}" role="group" aria-label="選択肢">${choices}</div>
+      ${fb}
+      <div><button class="link" type="button" data-action="quit">やめて一覧へ戻る</button></div>
+    </div>`;
+  }
+
+  function renderResult() {
+    const v = view;
+    const ids = v.ids;
+    const okN = ids.filter((id) => v.results[id]).length;
+    const missed = ids.filter((id) => !v.results[id]);
+    const u = v.mode === "unit" ? UNITS.find((x) => x.id === v.unitId) : null;
+    const next = u ? UNITS[UNITS.indexOf(u) + 1] : null;
+    app.innerHTML = `<div class="stack-lg">
+      <div class="stack">
+        <div class="eyebrow">${esc(modeLabel(v))}${u ? ` · ${esc(u.title)}` : ""}</div>
+        <div class="score"><b>${okN}</b><span class="muted">/ ${ids.length} 問 正解</span></div>
+      </div>
+      <ul class="result-list">${ids.map((id) => {
+        const q = Q.get(id);
+        return `<li><span class="r ${v.results[id] ? "ok" : "err"}">${v.results[id] ? "○" : "×"}</span><span>${md(q.q)}<br><span class="muted" style="font-size:13px">${q.unitNo}. ${esc(q.unit.title)}</span></span></li>`;
+      }).join("")}</ul>
+      <div class="actions">
+        ${missed.length ? `<button class="btn btn-primary" type="button" data-action="retry">間違えた ${missed.length} 問をもう一度</button>` : ""}
+        ${next ? `<button class="btn ${missed.length ? "" : "btn-primary"}" type="button" data-action="unit" data-unit="${next.id}">次の単元：${esc(next.title)}</button>` : ""}
+        <button class="btn" type="button" data-action="home">単元一覧へ</button>
+      </div>
+    </div>`;
+  }
+
+  function renderCheat() {
+    const groups = UNITS.filter((u) => u.swift && u.swift.length).map((u) => `<section class="stack">
+      <h3><button class="link" style="font-size:16px;font-weight:700" type="button" data-action="unit" data-unit="${u.id}">${UNITS.indexOf(u) + 1}. ${esc(u.title)}</button></h3>
+      <div class="table-wrap"><table><thead><tr><th>Swift</th><th>TypeScript</th></tr></thead><tbody>
+      ${u.swift.map(([s, t]) => `<tr><td>${md(s)}</td><td>${md(t)}</td></tr>`).join("")}
+      </tbody></table></div></section>`).join("");
+    app.innerHTML = `<div class="stack-lg">
+      <div class="stack"><h1>Swift 対応表</h1><p class="muted" style="margin:0">各単元の「Swift と比べると」をまとめたもの。単元名から本文へ戻れます。</p></div>
+      ${groups}
+    </div>`;
+  }
+
+  function renderFooter() {
+    const m = DATA.meta;
+    document.getElementById("verified").textContent = `問題と例のコードは TypeScript ${m.versions.ts7} と ${m.versions.ts5}（strict）で型チェックし、出力の問題は Node.js で実行して確認（${m.checkedAt}）`;
+    const row = document.getElementById("reset-row");
+    row.innerHTML = view.confirmReset
+      ? `<span>進捗をすべて消しますか？</span><button class="link" type="button" data-action="reset-yes" style="color:var(--err)">消す</button><button class="link" type="button" data-action="reset-no">やめる</button>`
+      : `<button class="link" type="button" data-action="reset" style="color:var(--muted)">進捗をリセット</button>`;
+  }
+
+  function render() {
+    if (view.name === "home") renderHome();
+    else if (view.name === "unit") renderUnit();
+    else if (view.name === "quiz") renderQuiz();
+    else if (view.name === "result") renderResult();
+    else if (view.name === "cheatsheet") renderCheat();
+    document.getElementById("nav-home").setAttribute("aria-current", view.name === "cheatsheet" ? "false" : "page");
+    document.getElementById("nav-cheat").setAttribute("aria-current", view.name === "cheatsheet" ? "page" : "false");
+    renderFooter();
+  }
+
+  // ---------- 操作 ----------
+  document.addEventListener("click", (ev) => {
+    const el = ev.target.closest("[data-action]");
+    if (!el) return;
+    const a = el.dataset.action;
+    if (a === "home") go({ name: "home" });
+    else if (a === "cheatsheet") go({ name: "cheatsheet" });
+    else if (a === "unit") go({ name: "unit", unitId: el.dataset.unit });
+    else if (a === "start") {
+      const u = UNITS.find((x) => x.id === el.dataset.unit);
+      startQuiz("unit", u.questions.map((q) => q.id), u.id);
+    }
+    else if (a === "wrong") startQuiz("wrong", wrongIds());
+    else if (a === "review") startQuiz("review", reviewIds());
+    else if (a === "pick" && view.name === "quiz" && view.picked === null) {
+      const q = Q.get(view.ids[view.idx]);
+      const picked = Number(el.dataset.choice);
+      view.picked = picked;
+      view.results[q.id] = picked === q.answer;
+      record(q.id, picked === q.answer);
+      render();
+      const fb = document.getElementById("feedback");
+      if (fb) fb.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "nearest" });
+    }
+    else if (a === "next" && view.name === "quiz") {
+      if (view.idx + 1 >= view.ids.length) go({ name: "result", mode: view.mode, ids: view.ids, unitId: view.unitId, results: view.results });
+      else {
+        view.idx++;
+        view.picked = null;
+        view.order = orderFor(Q.get(view.ids[view.idx]));
+        render();
+        window.scrollTo(0, 0);
+      }
+    }
+    else if (a === "retry" && view.name === "result") {
+      startQuiz(view.mode === "unit" ? "wrong" : view.mode, view.ids.filter((id) => !view.results[id]), view.unitId);
+    }
+    else if (a === "quit") go({ name: "home" });
+    else if (a === "reset") { view.confirmReset = true; renderFooter(); }
+    else if (a === "reset-no") { view.confirmReset = false; renderFooter(); }
+    else if (a === "reset-yes") {
+      progress = { answers: {}, resetAt: Date.now() };
+      schedulePush();
+      go({ name: "home" });
+    }
+  });
+
+  render();
+})();
+</script>
